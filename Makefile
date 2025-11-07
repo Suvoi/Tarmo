@@ -1,7 +1,7 @@
 # Configuration
 VERSION=0.0.1
 REPO_URL=git@github.com:Suvoi/Tarmo.git
-IMAGE_NAME=ghcr.io/Suvoi/tarmo:$(VERSION)
+IMAGE_NAME=ghcr.io/suvoi/tarmo:$(VERSION)
 
 .PHONY: release
 
