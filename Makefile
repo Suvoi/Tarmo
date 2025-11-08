@@ -27,7 +27,7 @@ release:
 
 	@# GHCR login
 	@echo "Logging in to GHCR..."; \
-	echo $${GHCR_TOKEN} | docker login ghcr.io -u Suvoi --password-stdin
+	echo $${GHCR_TOKEN} | docker login ghcr.io -u rrocas --password-stdin
 
 	@# Docker push
 	@echo "Pushing Docker image to GHCR..."; \
