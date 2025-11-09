@@ -35,11 +35,13 @@ export default function Page() {
         </header>
 
         <div className="h-full grid p-4">
-            <Card className="w-48 h-48 felx items-center justify-center cursor-pointer">
-                <CardContent className="h-full w-full flex items-center justify-center">
-                    <Plus />
-                </CardContent>
-            </Card>
+            <a href="/recipes/new" className="w-48 h-48">
+                <Card className="w-48 h-48 felx items-center justify-center cursor-pointer">
+                    <CardContent className="h-full w-full flex items-center justify-center">
+                        <Plus />
+                    </CardContent>
+                </Card>
+            </a>
         </div>
 
       </SidebarInset>
