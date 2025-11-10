@@ -45,13 +45,3 @@ def get_recipe(recipe_id: int, db=Depends(get_db)):
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     return recipe
-
-
-@app.post("/recipes/{recipe_id}/items", status_code=status.HTTP_201_CREATED)
-def add_recipe_item(recipe_id: int, item: schemas.RecipeItemCreate, db=Depends(get_db)):
-    """Attach an ingredient or subrecipe to a recipe."""
-    # Optional: Validate recipe existence before adding items.
-    if not crud.get_recipe(db, recipe_id):
-        raise HTTPException(status_code=404, detail="Parent recipe not found")
-
-    return crud.add_item_to_recipe(db, recipe_id, item)
