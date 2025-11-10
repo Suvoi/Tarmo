@@ -8,7 +8,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY app ./app
+COPY src ./app
 RUN mkdir -p /app/data
 
 # Ensure an empty SQLite file exists (mounted later as a volume)

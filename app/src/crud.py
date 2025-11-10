@@ -23,3 +23,12 @@ def list_recipes(db: Session) -> list[models.Recipe]:
 def get_recipe(db: Session, recipe_id: int) -> models.Recipe | None:
     """Return a recipe by ID, or None if not found."""
     return db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+
+def delete_recipe(db: Session, recipe_id: int) -> bool:
+    """Delete a recipe by ID. Returns True if deleted, False if not found."""
+    recipe = db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
+    if not recipe:
+        return False
+    db.delete(recipe)
+    db.commit()
+    return True

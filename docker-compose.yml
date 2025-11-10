@@ -1,0 +1,26 @@
+networks:
+  tarmo-network:
+    driver: bridge
+
+services:
+  tarmo-client:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: tarmo-client
+    ports:
+      - "8000:80"
+    depends_on:
+      - tarmo
+    networks:
+      - tarmo-network
+
+  tarmo:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: tarmo
+    expose:
+      - "9136"
+    networks:
+      - tarmo-network

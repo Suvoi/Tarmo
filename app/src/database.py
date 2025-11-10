@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Absolute path to the "app/data" folder
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # go up one level from src/
-DATA_DIR = os.path.join(BASE_DIR, "app", "data")
+DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)  # ensure the folder exists
 
 # Full path to the database

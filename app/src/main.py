@@ -45,3 +45,11 @@ def get_recipe(recipe_id: int, db=Depends(get_db)):
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
     return recipe
+
+@app.delete("/recipes/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_recipe(recipe_id: int, db=Depends(get_db)):
+    """Delete a recipe by its ID."""
+    deleted = crud.delete_recipe(db, recipe_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    return None
