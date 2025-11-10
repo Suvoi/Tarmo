@@ -32,9 +32,9 @@ export default function Page() {
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
-                                <BreadcrumbLink href="/recipes">
-                                    Recipes
-                                </BreadcrumbLink>
+                                <Link href="/recipes" passHref>
+                                    <BreadcrumbLink>Recipes</BreadcrumbLink>
+                                </Link>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator className="hidden md:block" />
                             <BreadcrumbItem>
