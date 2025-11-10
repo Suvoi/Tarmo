@@ -6,6 +6,7 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
+import Link from "next/link"
 
 export default function Page() {
   return (
@@ -35,13 +36,13 @@ export default function Page() {
         </header>
 
         <div className="h-full grid p-4">
-            <a href="/recipes/new" className="w-48 h-48">
+            <Link href="/recipes/new" className="w-48 h-48">
                 <Card className="w-48 h-48 felx items-center justify-center cursor-pointer">
                     <CardContent className="h-full w-full flex items-center justify-center">
                         <Plus />
                     </CardContent>
                 </Card>
-            </a>
+            </Link>
         </div>
 
       </SidebarInset>

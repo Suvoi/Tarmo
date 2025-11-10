@@ -1,6 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb"
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle, } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import {
     SidebarInset,
@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FieldSet, FieldLegend, FieldDescription, FieldGroup, Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { FieldSet, FieldGroup, Field, FieldLabel } from "@/components/ui/field"
+import Link from "next/link"
 
 export default function Page() {
     return (
@@ -49,7 +50,7 @@ export default function Page() {
                             Create a New Recipe
                         </CardTitle>
                         <CardAction>
-                            <a href="/recipes">Back</a>
+                            <Link href="/recipes">Back</Link>
                         </CardAction>
                     </CardHeader>
                     <CardContent className="h-full">
