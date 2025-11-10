@@ -5,14 +5,6 @@ Pydantic models for request validation and response serialization.
 from pydantic import BaseModel
 from typing import Optional, List
 
-
-class RecipeItemCreate(BaseModel):
-    item_type: str
-    item_id: int
-    quantity: float
-    unit: Optional[str] = None
-
-
 class RecipeCreate(BaseModel):
     name: str
     instructions: Optional[str] = None

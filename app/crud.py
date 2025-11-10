@@ -1,6 +1,5 @@
 """
-CRUD utility functions that encapsulate all database interactions.
-Keeps business logic separate from route definitions.
+CRUD utility functions for simple recipes.
 """
 
 from sqlalchemy.orm import Session
@@ -24,14 +23,3 @@ def list_recipes(db: Session) -> list[models.Recipe]:
 def get_recipe(db: Session, recipe_id: int) -> models.Recipe | None:
     """Return a recipe by ID, or None if not found."""
     return db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
-
-
-def add_item_to_recipe(
-    db: Session, recipe_id: int, item: schemas.RecipeItemCreate
-) -> models.RecipeItem:
-    """Attach an ingredient or subrecipe to an existing recipe."""
-    recipe_item = models.RecipeItem(recipe_id=recipe_id, **item.dict())
-    db.add(recipe_item)
-    db.commit()
-    db.refresh(recipe_item)
-    return recipe_item
