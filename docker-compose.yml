@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
     container_name: tarmo-client
     ports:
-      - "8000:80"
+      - "3000:3000"
     depends_on:
       - tarmo
     networks:
@@ -22,5 +22,7 @@ services:
     container_name: tarmo
     expose:
       - "9136"
+    volumes:
+      - ./app/data:/app/data
     networks:
       - tarmo-network

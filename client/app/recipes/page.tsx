@@ -8,7 +8,24 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 
-export default function Page() {
+type Recipe = {
+  id: string | number
+  name: string
+  description?: string
+}
+
+async function getRecipes() {
+  const res = await fetch("http://tarmo:9136/recipes", { cache: "no-store" });
+  const data = await res.json();
+  console.log("Raw API response:", data);
+  return data; // o data.recipes si la API tiene esa propiedad
+}
+
+
+export default async function Page() {
+  const recipes = await getRecipes()
+  console.log("Recipes:", recipes);
+
   return (
     <SidebarProvider
       style={
@@ -35,14 +52,27 @@ export default function Page() {
           </Breadcrumb>
         </header>
 
-        <div className="h-full grid p-4">
+        <div className="h-full grid grid-cols-5 p-4">
             <Link href="/recipes/new" className="w-48 h-48">
-                <Card className="w-48 h-48 felx items-center justify-center cursor-pointer">
+                <Card className="w-48 h-48 flex items-center justify-center cursor-pointer">
                     <CardContent className="h-full w-full flex items-center justify-center">
                         <Plus />
                     </CardContent>
                 </Card>
             </Link>
+
+            {recipes.map((recipe: Recipe) => (
+            <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
+              <Card className="w-48 h-48 flex flex-col justify-between cursor-pointer hover:shadow-lg transition">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold">{recipe.name}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {recipe.description || "No description"}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
 
       </SidebarInset>

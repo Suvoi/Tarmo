@@ -7,6 +7,8 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from . import models, schemas, crud
 from .database import Base, engine, SessionLocal
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # Automatically create all tables on startup (safe for dev/prototyping)
 Base.metadata.create_all(bind=engine)
 
@@ -16,6 +18,13 @@ app = FastAPI(
     description="Optimizze and control batches with recipes."
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency that provides a new database session per request.
 def get_db():
