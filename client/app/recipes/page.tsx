@@ -24,7 +24,6 @@ async function getRecipes() {
     }
 
     const data = await res.json();
-    console.log("Raw API response:", data);
     return Array.isArray(data) ? data : data.recipes || [];
   } catch (err) {
     console.warn("API not available, returning empty recipe list");
@@ -36,7 +35,6 @@ async function getRecipes() {
 
 export default async function Page() {
   const recipes = await getRecipes()
-  console.log("Recipes:", recipes);
 
   return (
     <SidebarProvider
