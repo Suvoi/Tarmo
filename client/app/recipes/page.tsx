@@ -16,7 +16,7 @@ type Recipe = {
 
 async function getRecipes() {
   try {
-    const res = await fetch("http://tarmo:9136/recipes", { cache: "no-store" });
+    const res = await fetch("/api/recipes", { cache: "no-store" });
 
     if (!res.ok) {
       console.warn("API responded with error:", res.status);
@@ -26,8 +26,15 @@ async function getRecipes() {
     const data = await res.json();
     return Array.isArray(data) ? data : data.recipes || [];
   } catch (err) {
-    console.warn("API not available, returning empty recipe list");
-    return [];
+    console.warn("API not available, returning a mockup recipe list");
+    return [
+      {"id": "1", "name": "Recipe 1", "instructions": "Various instructions..."},
+      {"id": "2", "name": "Recipe 2", "instructions": "Various instructions..."},
+      {"id": "3", "name": "Recipe 3", "instructions": "Various instructions..."},
+      {"id": "4", "name": "Recipe 4", "instructions": "Various instructions..."},
+      {"id": "5", "name": "Recipe 5", "instructions": "Various instructions..."},
+      {"id": "6", "name": "Recipe 6", "instructions": "Various instructions..."},
+    ];
   }
 }
 
