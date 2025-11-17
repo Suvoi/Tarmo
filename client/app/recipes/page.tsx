@@ -11,7 +11,7 @@ import Link from "next/link"
 type Recipe = {
   id: string | number
   name: string
-  description?: string
+  instructions?: string
 }
 
 async function getRecipes() {
@@ -84,7 +84,7 @@ export default async function Page() {
                 <CardContent className="p-4">
                   <h3 className="text-lg font-semibold">{recipe.name}</h3>
                   <p className="text-sm text-muted-foreground line-clamp-3">
-                    {recipe.description || "No description"}
+                    {recipe.instructions || "No instructions"}
                   </p>
                 </CardContent>
               </Card>
