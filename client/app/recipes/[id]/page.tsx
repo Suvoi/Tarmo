@@ -68,7 +68,7 @@ export default function Page({ params }: { params: { id: string } }) {
   if (!recipe) return <div className="p-4">Recipe not found</div>
 
   return (
-    <SidebarProvider style={{ "--sidebar-width": "19rem" } as React.CSSProperties}>
+    <SidebarProvider style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>
       <AppSidebar />
       <SidebarInset className="flex flex-col justify-between">
 
