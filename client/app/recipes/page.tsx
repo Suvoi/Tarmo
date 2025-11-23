@@ -64,8 +64,7 @@ export default function Page() {
           </Breadcrumb>
         </header>
 
-        <div className="h-full grid grid-cols-5 p-4 gap-4">
-          {/* Card para crear una nueva receta */}
+        <div className="h-full grid grid-cols-5 p-6 gap-4">
           <Link href="/recipes/new" className="w-48 h-48">
             <Card className="w-48 h-48 flex items-center justify-center cursor-pointer hover:shadow-lg transition">
               <CardContent className="h-full w-full flex items-center justify-center">
@@ -74,7 +73,6 @@ export default function Page() {
             </Card>
           </Link>
 
-          {/* Cards de recetas */}
           {loading ? (
             <div className="col-span-5 text-center text-gray-500">Loading...</div>
           ) : (

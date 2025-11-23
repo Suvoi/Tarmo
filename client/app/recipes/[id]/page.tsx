@@ -1,5 +1,10 @@
 "use client"
 
+import { AppSidebar } from "@/components/app-sidebar"
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 type Recipe = {
@@ -17,7 +22,11 @@ export default function Page({ params }: { params: { id: string } }) {
       try {
         const res = await fetch(`/api/recipes/${params.id}`, { cache: "no-store" })
         if (!res.ok) {
-          setRecipe(null)
+          setRecipe({
+            id: params.id,
+            name: `Mock Recipe ${params.id}`,
+            instructions: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris hendrerit neque purus, non facilisis velit aliquet eget. Maecenas bibendum maximus dolor, id rutrum tortor. Nulla condimentum, mi vel ornare facilisis, purus neque malesuada leo, eu facilisis orci tellus quis mauris. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vivamus volutpat facilisis leo, ac tincidunt dui pharetra at. Integer orci diam, fermentum maximus consequat et, semper sit amet orci. Vestibulum vulputate justo lacus, tristique efficitur sapien dignissim euismod. Etiam tortor mi, tincidunt in scelerisque vitae, porta et tortor. Nam lorem dolor, tempus a ultrices et, facilisis. "
+          })
           return
         }
         const data = await res.json()
@@ -37,11 +46,43 @@ export default function Page({ params }: { params: { id: string } }) {
   if (!recipe) return <div className="p-4">Recipe not found</div>
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold">{recipe.name}</h1>
-      <p className="mt-4 whitespace-pre-wrap">
-        {recipe.instructions || "No instructions available"}
-      </p>
-    </div>
+    <SidebarProvider style={{ "--sidebar-width": "19rem" } as React.CSSProperties}>
+      <AppSidebar />
+      <SidebarInset className="flex flex-col justify-between">
+
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/recipes">Recipes</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{recipe.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+
+      <div className="p-6 h-full">
+        <h1 className="text-3xl font-bold">{recipe.name}</h1>
+        <p className="mt-4 whitespace-pre-wrap">
+          {recipe.instructions || "No instructions available"}
+        </p>
+      </div>
+
+      <div className="h-16 px-4 flex items-center justify-between underline text-lg">
+        <Link href="/recipes">Back</Link>
+        <div className="space-x-4">
+          <Link href="#">Edit</Link>
+          <Link href="#">Delete</Link>
+        </div>
+      </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

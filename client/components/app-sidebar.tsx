@@ -1,5 +1,6 @@
 import * as React from "react"
 import { Apple } from "lucide-react"
+import { BookText } from "lucide-react"
 
 import {
   Sidebar,
@@ -12,12 +13,12 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 
-// This is sample data.
 const data = {
   navMain: [
     {
       title: "Recipes",
       url: "/recipes",
+      icon: BookText
     },
   ],
 }
@@ -45,15 +46,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-2">
-            {data.navMain.map((item) => (
+            {data.navMain.map((item) => {
+              const Icon = item.icon;
+              return ( 
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
                   <Link href={item.url} className="font-medium">
-                    {item.title}
+                    <Icon className="size-5" /> {item.title}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            ))}
+              )
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
