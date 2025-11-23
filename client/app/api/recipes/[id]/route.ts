@@ -15,3 +15,20 @@ export async function GET(
   const data = await res.json();
   return NextResponse.json(data);
 }
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  const res = await fetch(`http://tarmo:9136/recipes/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    return NextResponse.json({ error: "Recipe not found" }, { status: res.status });
+  }
+
+  return new NextResponse(null, { status: res.status });
+}

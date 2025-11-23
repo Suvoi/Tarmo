@@ -2,7 +2,7 @@
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -16,6 +16,15 @@ type Recipe = {
 export default function Page({ params }: { params: { id: string } }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
+
+  async function deleteRecipe() {
+    try {
+      const res = await fetch(`/api/recipes/${params.id}`, {
+      method: "DELETE"})
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   useEffect(() => {
     async function loadRecipe() {
@@ -79,7 +88,9 @@ export default function Page({ params }: { params: { id: string } }) {
         <Link href="/recipes">Back</Link>
         <div className="space-x-4">
           <Link href="#">Edit</Link>
-          <Link href="#">Delete</Link>
+          <Button onClick={deleteRecipe} className="cursor-pointer">
+            Delete
+          </Button>
         </div>
       </div>
       </SidebarInset>
