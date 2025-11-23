@@ -7,6 +7,19 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+import { ChevronLeft, Trash2, Undo2 } from "lucide-react"
+
 type Recipe = {
   id: string | number
   name: string
@@ -88,9 +101,32 @@ export default function Page({ params }: { params: { id: string } }) {
         <Link href="/recipes">Back</Link>
         <div className="space-x-4">
           <Link href="#">Edit</Link>
-          <Button onClick={deleteRecipe} className="cursor-pointer">
-            Delete
-          </Button>
+          <Dialog>
+            <DialogTrigger>
+              <Button variant="destructive" className="cursor-pointer">
+                <Trash2 />
+                Delete
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Recipe?</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently delete this recipe.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex justify-between!">
+                <DialogClose className="cursor-pointer">
+                  Back
+                </DialogClose>
+                <Button onClick={deleteRecipe} variant="destructive" className="cursor-pointer">
+                  <Trash2 />
+                  Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
         </div>
       </div>
       </SidebarInset>

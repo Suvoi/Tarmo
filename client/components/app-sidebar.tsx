@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { Apple } from "lucide-react"
 import { BookText } from "lucide-react"
@@ -13,6 +15,8 @@ import {
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 
+import { usePathname } from "next/navigation"
+
 const data = {
   navMain: [
     {
@@ -24,6 +28,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
   return (
     <Sidebar variant="sidebar" {...props}>
       <SidebarHeader>
@@ -48,9 +53,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenu className="gap-2">
             {data.navMain.map((item) => {
               const Icon = item.icon;
+              const isActive = pathname.startsWith(item.url)
               return ( 
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
+                <SidebarMenuButton asChild isActive={isActive}>
                   <Link href={item.url} className="font-medium">
                     <Icon className="size-5" /> {item.title}
                   </Link>
