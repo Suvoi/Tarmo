@@ -8,7 +8,9 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { ChevronRight, Inbox, LucideReceiptRussianRuble, Plus } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 
 type Recipe = {
   id: string | number
@@ -24,7 +26,7 @@ export default function Page() {
     async function loadRecipes() {
 
       if (process.env.NODE_ENV === "development") {
-        setRecipes(Array.from({ length: 16 }, (_, i) => ({
+        setRecipes(Array.from({ length: 12 }, (_, i) => ({
           id: i + 1,
           name: `Recipe ${i + 1}`,
         })))
@@ -68,7 +70,7 @@ export default function Page() {
           </Breadcrumb>
         </header>
 
-        <div className="border-blue-700 h-16 flex p-4 items-center space-x-2">
+        <div className="h-16 flex p-4 items-center space-x-2">
           <Link href="/recipes/new">
             <Button className="cursor-pointer">
               <Plus/>
@@ -77,10 +79,12 @@ export default function Page() {
           <Input className="w-1/3"placeholder="Search..."/>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
-            <div className="text-center text-gray-500">Loading...</div>
-          ) : (
+            <div className="h-full flex items-center justify-center">
+              <Spinner/>
+            </div>
+          ) : recipes?.length ? (
             <div className="grid grid-cols-3 gap-2">
               {recipes.map((recipe) => (
                 <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
@@ -94,6 +98,30 @@ export default function Page() {
                   </Card>
                 </Link>
               ))}
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Inbox />
+                  </EmptyMedia>
+                  <EmptyTitle>
+                    <h1>Looks a bit empty…</h1>
+                  </EmptyTitle>
+                  <EmptyDescription>
+                    <p>Add a recipe to start building your collection.</p>
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Link href="/recipes/new">
+                    <Button className="cursor-pointer items-center">
+                      Add recipe
+                      <ChevronRight />
+                    </Button>
+                  </Link>
+                </EmptyContent>
+              </Empty>
             </div>
           )}
         </div>

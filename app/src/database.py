@@ -22,3 +22,12 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 # Base class for declarative models
 Base = declarative_base()
+
+# Dependency that provides a new database session per request.
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+

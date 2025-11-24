@@ -1,7 +1,7 @@
 @host = localhost
 @port = 9136
 @baseUrl = http://{{host}}:{{port}}
-@recipeId = 1
+@recipeId = 2
 
 ### GET: All recipes
 GET {{baseUrl}}/recipes
@@ -19,7 +19,14 @@ Content-Type: application/json
 
 {
   "name": "Generic recipe",
-  "instructions": "generic instructions"
+  "description": "generic description",
+  "quantity": "100",
+  "unit": "g",
+  "price": "10",
+  "currency": "RON",
+  "time": "30",
+  "difficulty": "easy",
+  "img_url": "unknown"
 }
 
 
