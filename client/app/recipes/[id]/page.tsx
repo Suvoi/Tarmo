@@ -3,9 +3,11 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import {
   Dialog,
@@ -18,7 +20,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-import { ChevronLeft, Trash2, Undo2 } from "lucide-react"
+import { ChevronLeft, Pencil, Trash2 } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 type Recipe = {
   id: string | number
@@ -29,11 +32,11 @@ type Recipe = {
 export default function Page({ params }: { params: { id: string } }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   async function deleteRecipe() {
     try {
-      const res = await fetch(`/api/recipes/${params.id}`, {
-      method: "DELETE"})
+      await fetch(`/api/recipes/${params.id}`, { method: "DELETE" })
     } catch (err) {
       console.error(err)
     }
@@ -47,7 +50,7 @@ export default function Page({ params }: { params: { id: string } }) {
           setRecipe({
             id: params.id,
             name: `Mock Recipe ${params.id}`,
-            instructions: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris hendrerit neque purus, non facilisis velit aliquet eget. Maecenas bibendum maximus dolor, id rutrum tortor. Nulla condimentum, mi vel ornare facilisis, purus neque malesuada leo, eu facilisis orci tellus quis mauris. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vivamus volutpat facilisis leo, ac tincidunt dui pharetra at. Integer orci diam, fermentum maximus consequat et, semper sit amet orci. Vestibulum vulputate justo lacus, tristique efficitur sapien dignissim euismod. Etiam tortor mi, tincidunt in scelerisque vitae, porta et tortor. Nam lorem dolor, tempus a ultrices et, facilisis. "
+            instructions: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris hendrerit neque purus, non facilisis velit aliquet eget. Maecenas bibendum maximus dolor, id rutrum tortor..."
           })
           return
         }
@@ -64,14 +67,12 @@ export default function Page({ params }: { params: { id: string } }) {
     loadRecipe()
   }, [params.id])
 
-  if (loading) return <div className="p-4">Loading...</div>
-  if (!recipe) return <div className="p-4">Recipe not found</div>
-
   return (
     <SidebarProvider style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>
       <AppSidebar />
       <SidebarInset className="flex flex-col justify-between">
 
+        {/* Breadcrumb */}
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <Breadcrumb>
             <BreadcrumbList>
@@ -84,51 +85,76 @@ export default function Page({ params }: { params: { id: string } }) {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>{recipe.name}</BreadcrumbPage>
+                <BreadcrumbPage>{recipe ? recipe.name : loading ? "Loading..." : "Not found"}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </header>
 
-      <div className="p-6 h-full">
-        <h1 className="text-3xl font-bold">{recipe.name}</h1>
-        <p className="mt-4 whitespace-pre-wrap">
-          {recipe.instructions || "No instructions available"}
-        </p>
-      </div>
+        {/* Main content */}
+        <div className="p-4 h-full flex flex-col justify-center items-center">
+          {loading ? (
+            <Spinner />
+          ) : !recipe ? (
+            <h1 className="text-xl font-medium">Recipe not found</h1>
+          ) : (
+            <>
+              <div className="flex-1 w-full">
+                <h1 className="text-3xl font-bold">{recipe.name}</h1>
+                <p className="mt-4 whitespace-pre-wrap">{recipe.instructions || "No instructions available"}</p>
+              </div>
 
-      <div className="h-16 px-4 flex items-center justify-between underline text-lg">
-        <Link href="/recipes">Back</Link>
-        <div className="space-x-4">
-          <Link href="#">Edit</Link>
-          <Dialog>
-            <DialogTrigger>
-              <Button variant="destructive" className="cursor-pointer">
-                <Trash2 />
-                Delete
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Recipe?</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. This will permanently delete this recipe.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex justify-between!">
-                <DialogClose className="cursor-pointer">
-                  Back
-                </DialogClose>
-                <Button onClick={deleteRecipe} variant="destructive" className="cursor-pointer">
-                  <Trash2 />
-                  Delete
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          
+              {/* Footer actions */}
+              <div className="h-16 flex items-center justify-between underline text-lg w-full">
+                <Link href="/recipes">
+                  <Button variant="outline" className="cursor-pointer">
+                    <ChevronLeft />
+                    Back
+                  </Button>
+                </Link>
+                <div className="space-x-4">
+                  <Button variant="secondary" className="cursor-pointer">
+                    <Pencil />
+                    Edit
+                  </Button>
+                  <Dialog>
+                    <DialogTrigger>
+                      <Button variant="destructive" className="cursor-pointer">
+                        <Trash2 />
+                        Delete
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Delete Recipe?</DialogTitle>
+                        <DialogDescription>
+                          This action cannot be undone. This will permanently delete this recipe.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="flex justify-between!">
+                        <DialogClose className="cursor-pointer">Back</DialogClose>
+                        <Button
+                          onClick={() => {
+                            deleteRecipe()
+                            router.push("/recipes")
+                            toast.info(`Recipe Deleted`, {
+                              description: `"${recipe.name}" has been permanently removed.`,
+                            })
+                          }}
+                          variant="destructive"
+                          className="cursor-pointer"
+                        >
+                          <Trash2 />
+                          Delete
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      </div>
       </SidebarInset>
     </SidebarProvider>
   )

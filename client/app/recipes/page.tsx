@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "@/components/ui/breadcrumb"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus } from "lucide-react"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 
 type Recipe = {
   id: string | number
@@ -20,24 +22,26 @@ export default function Page() {
 
   useEffect(() => {
     async function loadRecipes() {
+
+      if (process.env.NODE_ENV === "development") {
+        setRecipes(Array.from({ length: 16 }, (_, i) => ({
+          id: i + 1,
+          name: `Recipe ${i + 1}`,
+        })))
+        setLoading(false)
+        return
+      }
+
       try {
-        const base = process.env.NEXT_PUBLIC_APP_URL || ""
-        const res = await fetch(`${base}/api/recipes`, { cache: "no-store" })
+        const res = await fetch(`/api/recipes`, { cache: "no-store" })
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
         const data = await res.json()
         setRecipes(Array.isArray(data) ? data : data.recipes || [])
       } catch (err) {
-        console.warn("API not available, using mockup recipes:", err)
-        setRecipes([
-          { id: "1", name: "Recipe 1", instructions: "Various instructions..." },
-          { id: "2", name: "Recipe 2", instructions: "Various instructions..." },
-          { id: "3", name: "Recipe 3", instructions: "Various instructions..." },
-          { id: "4", name: "Recipe 4", instructions: "Various instructions..." },
-          { id: "5", name: "Recipe 5", instructions: "Various instructions..." },
-          { id: "6", name: "Recipe 6", instructions: "Various instructions..." },
-        ])
+        console.warn("API not available, ", err)
+        setRecipes([])
       } finally {
         setLoading(false)
       }
@@ -49,7 +53,7 @@ export default function Page() {
   return (
     <SidebarProvider style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="flex flex-col h-screen">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <Breadcrumb>
             <BreadcrumbList>
@@ -64,30 +68,33 @@ export default function Page() {
           </Breadcrumb>
         </header>
 
-        <div className="h-full grid grid-cols-5 p-6 gap-4">
-          <Link href="/recipes/new" className="w-48 h-48">
-            <Card className="w-48 h-48 flex items-center justify-center cursor-pointer hover:shadow-lg transition">
-              <CardContent className="h-full w-full flex items-center justify-center">
-                <Plus size={36} />
-              </CardContent>
-            </Card>
+        <div className="border-blue-700 h-16 flex p-4 items-center space-x-2">
+          <Link href="/recipes/new">
+            <Button className="cursor-pointer">
+              <Plus/>
+            </Button>
           </Link>
+          <Input className="w-1/3"placeholder="Search..."/>
+        </div>
 
+        <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="col-span-5 text-center text-gray-500">Loading...</div>
+            <div className="text-center text-gray-500">Loading...</div>
           ) : (
-            recipes.map((recipe) => (
-              <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
-                <Card className="w-48 h-48 flex flex-col justify-between cursor-pointer hover:shadow-lg transition">
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold">{recipe.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {recipe.instructions || "No instructions"}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
+            <div className="grid grid-cols-3 gap-2">
+              {recipes.map((recipe) => (
+                <Link key={recipe.id} href={`/recipes/${recipe.id}`}>
+                  <Card className="flex flex-col justify-between cursor-pointer hover:shadow-lg transition">
+                    <CardContent>
+                      <h3 className="text-lg font-semibold">{recipe.name}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {recipe.instructions || "No instructions"}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </SidebarInset>
