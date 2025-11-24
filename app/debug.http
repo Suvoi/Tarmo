@@ -1,0 +1,28 @@
+@host = localhost
+@port = 9136
+@baseUrl = http://{{host}}:{{port}}
+@recipeId = 1
+
+### GET: All recipes
+GET {{baseUrl}}/recipes
+Accept: application/json
+
+
+### GET: recipe by ID
+GET {{baseUrl}}/recipes/{{recipeId}}
+Accept: application/json
+
+
+### POST: create recipe
+POST {{baseUrl}}/recipes
+Content-Type: application/json
+
+{
+  "name": "Generic recipe",
+  "instructions": "generic instructions"
+}
+
+
+### DELETE: delete recipe by id
+DELETE {{baseUrl}}/recipes/{{recipeId}}
+Accept: application/json
