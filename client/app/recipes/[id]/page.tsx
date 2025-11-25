@@ -22,11 +22,19 @@ import {
 
 import { ChevronLeft, Pencil, Trash2 } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import { Badge } from "@/components/ui/badge"
 
 type Recipe = {
   id: string | number
   name: string
-  instructions?: string
+  description?: string
+  quantity: number
+  unit: string
+  price?: number
+  currency?: string
+  time?: number
+  difficulty: string
+  img_url?: string
 }
 
 export default function Page({ params }: { params: { id: string } }) {
@@ -44,16 +52,27 @@ export default function Page({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function loadRecipe() {
-      try {
-        const res = await fetch(`/api/recipes/${params.id}`, { cache: "no-store" })
-        if (!res.ok) {
-          setRecipe({
+
+      if (process.env.NODE_ENV === "development") {
+        setRecipe({
             id: params.id,
             name: `Mock Recipe ${params.id}`,
-            instructions: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris hendrerit neque purus, non facilisis velit aliquet eget. Maecenas bibendum maximus dolor, id rutrum tortor..."
+            description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            quantity: 100,
+            unit: "g",
+            price: 10,
+            currency: "RON",
+            time: 5,
+            difficulty: "Easy",
+            img_url: "https://placehold.co/128"
           })
+          setLoading(false)
           return
-        }
+      }
+
+      try {
+        const res = await fetch(`/api/recipes/${params.id}`, { cache: "no-store" })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         setRecipe(data)
       } catch (err) {
@@ -100,8 +119,31 @@ export default function Page({ params }: { params: { id: string } }) {
           ) : (
             <>
               <div className="flex-1 w-full">
-                <h1 className="text-3xl font-bold">{recipe.name}</h1>
-                <p className="mt-4 whitespace-pre-wrap">{recipe.instructions || "No instructions available"}</p>
+                
+                <div className="flex justify-between space-x-4">
+                  <div className="flex space-x-4 w-4/5">
+                    <img src={recipe.img_url} alt="" className="rounded-lg"/>
+                    <div className="flex flex-col justify-between">
+                      <div className="">
+                        <h1 className="text-3xl">{recipe.name}</h1>
+                        <p className="text-lg">{recipe.description}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Badge variant="outline"># tasty</Badge>
+                        <Badge variant="outline"># salty</Badge>
+                        <Badge variant="outline"># patapim</Badge>
+                        <Badge variant="outline"># hp</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-1/5 flex flex-col justify-between items-end">
+                    <Badge variant="secondary">{recipe.quantity} {recipe.unit}</Badge>
+                    <Badge variant="secondary">{recipe.price} {recipe.currency}</Badge>
+                    <Badge variant="secondary">{recipe.time} min</Badge>
+                    <Badge variant="secondary">{recipe.difficulty}</Badge>
+                  </div>
+                </div>
+               
               </div>
 
               {/* Footer actions */}

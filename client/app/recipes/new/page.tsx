@@ -18,7 +18,6 @@ export default function Page() {
   const [name, setName] = useState("")
   const [instructions, setInstructions] = useState("")
   const [loading, setLoading] = useState(false)
-
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -81,8 +80,8 @@ export default function Page() {
         </div>
 
         {/* Form container centered */}
-        <div className="flex flex-1 items-center justify-center p-6">
-          <div className="w-full max-w-lg p-6 shadow-sm">
+        <div className="border flex flex-1 items-center p-6">
+          <div className="border w-full max-w-lg p-6 shadow-sm">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FieldSet>
                 <FieldGroup>

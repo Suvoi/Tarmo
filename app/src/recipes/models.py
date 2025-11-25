@@ -19,7 +19,7 @@ class Recipe(Base):
     currency = Column(String, nullable=True)
     time = Column(Integer, nullable=True)
     difficulty = Column(String, nullable=False)
-    img_url = Column(String, nullable=False)
+    img_url = Column(String, nullable=True)
 
     # -------- CLASSMETHODS -------- #
 

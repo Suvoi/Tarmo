@@ -9,7 +9,7 @@ class RecipeBase(BaseModel):
     currency: str | None = None
     time: int | None = None
     difficulty: str
-    img_url: str
+    img_url: str | None = None
 
 
 class RecipeCreate(RecipeBase):
