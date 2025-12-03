@@ -13,11 +13,9 @@ class Recipe(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    instructions = Column(Integer, nullable=False)
     quantity = Column(Integer, nullable=False)
     unit = Column(String, nullable=False)
-    price = Column(Float, nullable=True)
-    currency = Column(String, nullable=True)
-    time = Column(Integer, nullable=True)
     difficulty = Column(String, nullable=False)
     img_url = Column(String, nullable=True)
 
@@ -29,11 +27,9 @@ class Recipe(Base):
         recipe = cls(
             name=data.name,
             description=data.description,
+            instructions=data.instructions,
             quantity=data.quantity,
             unit=data.unit,
-            price=data.price,
-            currency=data.currency,
-            time=data.time,
             difficulty=data.difficulty,
             img_url=data.img_url,
         )
