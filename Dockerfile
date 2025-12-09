@@ -1,20 +1,15 @@
-# ---------- Base Stage ----------
-FROM python:3.12-slim
-
+FROM python:3.12-slim as build
+ENV PYTHONUNBUFFERED=1
+ENV POETRY_VIRTUALENVS_CREATE=false  # si usas poetry
 WORKDIR /app
-
-# Copy dependencies and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+COPY src/ /app/
 
-# Copy source code
-COPY src ./src
-RUN mkdir -p /app/data
-
-# Ensure an empty SQLite file exists (mounted later as a volume)
-RUN touch /app/data/recipes.db
-
+FROM python:3.12-slim
+WORKDIR /app
+COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=build /app /app
 EXPOSE 9136
-
-# Run FastAPI app with Uvicorn in production mode
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "9136"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9136", "--log-level", "info"]
