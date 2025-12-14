@@ -1,4 +1,5 @@
 FROM python:3.12-slim AS build
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY requirements.txt .
@@ -7,6 +8,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY src/ /app/src/
 
 FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY --from=build /usr/local /usr/local
 COPY --from=build /app /app
