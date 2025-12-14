@@ -1,9 +1,11 @@
 from pydantic import BaseModel, ConfigDict
+from typing import List
+
+from src.steps.schemas import StepBase
 
 class RecipeBase(BaseModel):
     name: str
     description: str | None = None
-    instructions: str
     quantity: float
     unit: str
     difficulty: str
@@ -11,10 +13,10 @@ class RecipeBase(BaseModel):
 
 
 class RecipeCreate(RecipeBase):
-    pass
+    steps: List[StepBase]
 
 
 class RecipeOut(RecipeBase):
     id: int
-
+    steps: List[StepBase]
     model_config = ConfigDict(from_attributes=True)
