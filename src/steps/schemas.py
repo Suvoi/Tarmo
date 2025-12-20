@@ -6,8 +6,9 @@ class StepBase(BaseModel):
     name: str
     instructions: Optional[str] = None
 
-class StepCreate(StepBase):
-    recipe_id: int
+class StepCreate(BaseModel):
+    name: str
+    instructions: Optional[str] = None
 
 class StepUpdate(BaseModel):
     order: Optional[int] = None

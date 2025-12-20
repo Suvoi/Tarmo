@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import List
 
 from src.steps.schemas import StepBase
+from src.steps.schemas import StepCreate
 
 class RecipeBase(BaseModel):
     name: str
@@ -13,7 +14,7 @@ class RecipeBase(BaseModel):
 
 
 class RecipeCreate(RecipeBase):
-    steps: List[StepBase]
+    steps: List[StepCreate]
 
 
 class RecipeOut(RecipeBase):

@@ -45,11 +45,11 @@ class Recipe(Base):
         steps = [
             Step(
                 recipe_id=recipe.id,
-                order=s.order,
+                order=i+1,
                 name=s.name,
                 instructions=s.instructions
             )
-            for s in data.steps
+            for i, s in enumerate(data.steps)
         ]
 
         db.add_all(steps)
