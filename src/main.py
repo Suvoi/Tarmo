@@ -16,7 +16,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Tarmo",
     version="2.0.0",
-    description="Optimize and control batches with recipes."
+    description="Optimize and control batches based on recipes."
 )
 
 app.add_middleware(
