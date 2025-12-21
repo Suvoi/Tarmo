@@ -1,0 +1,12 @@
+[project]
+name = "tarmo"
+version = "2.0.0"
+description = "Optimize and control batches based on recipes."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.127.0",
+    "pydantic>=2.12.5",
+    "sqlalchemy>=2.0.45",
+    "uvicorn>=0.40.0",
+]
