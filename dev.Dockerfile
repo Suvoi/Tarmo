@@ -1,8 +1,9 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UV_VENV_DISABLE=1
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock /app/
+RUN uv sync
 EXPOSE 9136
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "9136", "--reload","--log-level", "debug"]
+CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "9136", "--reload","--log-level", "debug"]
