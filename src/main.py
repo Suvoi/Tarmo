@@ -6,7 +6,7 @@ Defines routes and dependency injection for database sessions.
 from fastapi import FastAPI, Depends, HTTPException, status
 from src.database import Base, engine, SessionLocal
 
-from src.recipes.routes import router as recipes_router
+from src.recipes.controllers import router as recipes_router
 
 from fastapi.middleware.cors import CORSMiddleware
 

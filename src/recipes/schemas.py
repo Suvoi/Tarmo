@@ -1,23 +1,46 @@
-from pydantic import BaseModel, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field
+from typing import Optional, List
 
-from src.steps.schemas import StepBase
-from src.steps.schemas import StepCreate
+# -------- Step Schemas --------
+
+class StepBase(BaseModel):
+    name: str = Field(..., min_length=1)
+    instructions: Optional[str] = None
+    price: Optional[float] = None
+
+
+class StepCreate(StepBase):
+    pass
+
+
+class StepRead(StepBase):
+    id: int
+    order: int
+    recipe_id: int
+
+    class Config:
+        from_attributes = True
+
+
+# -------- Recipe Schemas --------
 
 class RecipeBase(BaseModel):
-    name: str
-    description: str | None = None
-    quantity: float
+    name: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    quantity: int = Field(..., gt=0)
     unit: str
     difficulty: str
-    img_url: str | None = None
+    img_url: Optional[str] = None
 
 
 class RecipeCreate(RecipeBase):
     steps: List[StepCreate]
 
 
-class RecipeOut(RecipeBase):
+class RecipeRead(RecipeBase):
     id: int
-    steps: List[StepBase]
-    model_config = ConfigDict(from_attributes=True)
+    steps: List[StepRead]
+
+    class Config:
+        from_attributes = True
+
