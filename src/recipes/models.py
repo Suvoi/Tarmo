@@ -1,10 +1,11 @@
-from sqlalchemy import ForeignKey, Column, Integer, String, Float
-from sqlalchemy.orm import relationship, Session
+from sqlalchemy import ForeignKey, Column, Integer, String, Float, Boolean
+from sqlalchemy.orm import relationship
 from src.database import Base
+
 
 class Recipe(Base):
     __tablename__ = "recipes"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -12,7 +13,8 @@ class Recipe(Base):
     unit = Column(String, nullable=False)
     difficulty = Column(String, nullable=False)
     img_url = Column(String, nullable=True)
-
+    is_draft = Column(Boolean, default=False)
+    
     steps = relationship(
         "Step",
         back_populates="recipe",
@@ -20,14 +22,15 @@ class Recipe(Base):
         order_by="Step.order"
     )
 
+
 class Step(Base):
     __tablename__ = "steps"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     recipe_id = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
     order = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
     instructions = Column(String, nullable=True)
     price = Column(Float, nullable=True)
-
+    
     recipe = relationship("Recipe", back_populates="steps")
