@@ -27,7 +27,6 @@ class Step(Base):
     recipe_id = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
     order = Column(Integer, nullable=False)
     name = Column(String, nullable=False)
-    instructions = Column(String, nullable=True)
-    price = Column(Float, nullable=True)
+    instructions = Column(String, nullable=False)
 
     recipe = relationship("Recipe", back_populates="steps")

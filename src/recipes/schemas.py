@@ -6,7 +6,6 @@ from typing import Optional, List
 class StepBase(BaseModel):
     name: str = Field(..., min_length=1)
     instructions: Optional[str] = None
-    price: Optional[float] = None
 
 
 class StepCreate(StepBase):
