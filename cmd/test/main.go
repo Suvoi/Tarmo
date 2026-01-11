@@ -3,19 +3,19 @@ package main
 import (
 	"fmt"
 	"log"
-	"tarmo/internal/modules/recipes/port"
-	"tarmo/internal/modules/recipes/service"
-	"tarmo/internal/repository"
+	"tarmo/internal/adapters/repository/recipes"
+	"tarmo/internal/core/recipes/ports"
+	"tarmo/internal/core/recipes/services"
 )
 
 func main() {
-	var repo port.RecipePort
-	repo, err := repository.NewSQLiteRecipesRepo("data/test.db")
+	var repo ports.RecipePort
+	repo, err := recipes.NewSQLiteRecipesRepo("data/test.db")
 	if err != nil {
-		log.Fatal("Error al abrir la DB:", err)
+		log.Fatal("Error opening DB:", err)
 	}
 
-	svc := service.NewRecipeService(repo)
+	svc := services.NewRecipeService(repo)
 
 	recipes, err := svc.ListRecipes()
 	if err != nil {
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	for _, r := range recipes {
-		fmt.Printf("ID: %s, Name: %s, Desc: %s, Qty: %d %s, Difficulty: %s\n",
-			r.ID, r.Name, r.Description, r.Quantity, r.Unit, r.Difficulty)
+		fmt.Printf("ID: %d, Name: %s, Desc: %s",
+			r.ID, r.Name, r.Description)
 	}
 }

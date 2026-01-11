@@ -21,7 +21,7 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 
 func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
 	rows, err := r.db.Query(`
-        SELECT id, name, description, quantity, unit, difficulty
+        SELECT id, name, description
         FROM recipes
     `)
 	if err != nil {
@@ -37,9 +37,6 @@ func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
 			&rcp.ID,
 			&rcp.Name,
 			&rcp.Description,
-			&rcp.Quantity,
-			&rcp.Unit,
-			&rcp.Difficulty,
 		); err != nil {
 			return nil, err
 		}
