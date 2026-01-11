@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"tarmo/internal/modules/recipes/model"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SQLiteRecipesRepo struct {
