@@ -1,7 +1,7 @@
-package model
+package domain
 
 type Recipe struct {
-	ID          string
+	ID          int
 	Name        string
 	Description string
 	Quantity    int

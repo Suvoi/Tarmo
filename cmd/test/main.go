@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var repo port.RecipePort
-	repo, err := repository.NewSQLiteRecipesRepo("recipes.db")
+	repo, err := repository.NewSQLiteRecipesRepo("data/test.db")
 	if err != nil {
 		log.Fatal("Error al abrir la DB:", err)
 	}

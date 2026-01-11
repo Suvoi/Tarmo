@@ -1,8 +1,8 @@
-package repository
+package recipes
 
 import (
 	"database/sql"
-	"tarmo/internal/modules/recipes/model"
+	"tarmo/internal/core/recipes/domain"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -19,7 +19,7 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 	return &SQLiteRecipesRepo{db: db}, nil
 }
 
-func (r *SQLiteRecipesRepo) GetAll() ([]*model.Recipe, error) {
+func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
 	rows, err := r.db.Query(`
         SELECT id, name, description, quantity, unit, difficulty
         FROM recipes
@@ -29,10 +29,10 @@ func (r *SQLiteRecipesRepo) GetAll() ([]*model.Recipe, error) {
 	}
 	defer rows.Close()
 
-	var recipes []*model.Recipe
+	var recipes []*domain.Recipe
 
 	for rows.Next() {
-		var rcp model.Recipe
+		var rcp domain.Recipe
 		if err := rows.Scan(
 			&rcp.ID,
 			&rcp.Name,
