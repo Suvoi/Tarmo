@@ -2,9 +2,9 @@ package domain
 
 type Recipe struct {
 	ID          int
-	Name        string
+	Name        string // Required
 	Description string
-	Quantity    int
-	Unit        string
-	Difficulty  string
+	Quantity    int    // Required
+	Unit        string // Required
+	Difficulty  int    // Required
 }

@@ -16,7 +16,29 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SQLiteRecipesRepo{db: db}, nil
+
+	repo := &SQLiteRecipesRepo{db: db}
+
+	if err := repo.init(); err != nil {
+		return nil, err
+	}
+
+	return repo, nil
+}
+
+func (r *SQLiteRecipesRepo) init() error {
+	query := `
+	CREATE TABLE IF NOT EXISTS recipes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		description TEXT,
+		quantity INTEGER,
+		unit TEXT,
+		difficulty TEXT
+	);
+	`
+	_, err := r.db.Exec(query)
+	return err
 }
 
 func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
@@ -44,4 +66,47 @@ func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
 	}
 
 	return recipes, nil
+}
+
+func (r *SQLiteRecipesRepo) GetByID(id int) (*domain.Recipe, error) {
+	row := r.db.QueryRow(`
+			SELECT id, name, description, quantity, unit, difficulty
+			FROM recipes WHERE id=?
+	`, id)
+
+	var rcp domain.Recipe
+	err := row.Scan(
+		&rcp.ID,
+		&rcp.Name,
+		&rcp.Description,
+		&rcp.Quantity,
+		&rcp.Unit,
+		&rcp.Difficulty,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &rcp, nil
+}
+
+func (r *SQLiteRecipesRepo) Create(rcp *domain.Recipe) error {
+	query := `
+	        INSERT INTO recipes (name, description, quantity, unit, difficulty)
+	        VALUES (?, ?, ?, ?, ?)
+	`
+	_, err := r.db.Exec(query,
+		rcp.Name,
+		rcp.Description,
+		rcp.Quantity,
+		rcp.Unit,
+		rcp.Difficulty,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
