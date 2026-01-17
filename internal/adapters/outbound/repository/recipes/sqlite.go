@@ -41,7 +41,7 @@ func (r *SQLiteRecipesRepo) init() error {
 	return err
 }
 
-func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
+func (r *SQLiteRecipesRepo) FindAll() ([]*domain.Recipe, error) {
 	rows, err := r.db.Query(`
         SELECT id, name, description
         FROM recipes
@@ -68,7 +68,7 @@ func (r *SQLiteRecipesRepo) GetAll() ([]*domain.Recipe, error) {
 	return recipes, nil
 }
 
-func (r *SQLiteRecipesRepo) GetByID(id int) (*domain.Recipe, error) {
+func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
 	row := r.db.QueryRow(`
 			SELECT id, name, description, quantity, unit, difficulty
 			FROM recipes WHERE id=?
@@ -93,7 +93,7 @@ func (r *SQLiteRecipesRepo) GetByID(id int) (*domain.Recipe, error) {
 	return &rcp, nil
 }
 
-func (r *SQLiteRecipesRepo) Create(rcp *domain.Recipe) error {
+func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) error {
 	query := `
 	        INSERT INTO recipes (name, description, quantity, unit, difficulty)
 	        VALUES (?, ?, ?, ?, ?)
@@ -108,5 +108,25 @@ func (r *SQLiteRecipesRepo) Create(rcp *domain.Recipe) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *SQLiteRecipesRepo) Remove(id int) error {
+	result, err := r.db.Exec(`
+		DELETE FROM recipes WHERE id = ?
+	`, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
 	return nil
 }
