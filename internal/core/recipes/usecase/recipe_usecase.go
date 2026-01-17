@@ -3,26 +3,26 @@ package usecase
 import (
 	"fmt"
 	"tarmo/internal/core/recipes/domain"
-	ports "tarmo/internal/core/recipes/ports/outbound"
+	"tarmo/internal/core/recipes/ports/outbound"
 )
 
 type RecipeUseCase struct {
-	port ports.RecipePort
+	port outbound.RecipeRepositoryPort
 }
 
-func NewRecipeUseCase(port ports.RecipePort) *RecipeUseCase {
+func NewRecipeUseCase(port outbound.RecipeRepositoryPort) *RecipeUseCase {
 	return &RecipeUseCase{port: port}
 }
 
-func (s *RecipeUseCase) ListRecipes() ([]*domain.Recipe, error) {
-	return s.port.GetAll()
+func (uc *RecipeUseCase) ListRecipes() ([]*domain.Recipe, error) {
+	return uc.port.FindAll()
 }
 
-func (s *RecipeUseCase) GetRecipe(id int) (*domain.Recipe, error) {
-	return s.port.GetByID(id)
+func (uc *RecipeUseCase) GetRecipe(id int) (*domain.Recipe, error) {
+	return uc.port.FindByID(id)
 }
 
-func (s *RecipeUseCase) CreateRecipe(rcp *domain.Recipe) error {
+func (uc *RecipeUseCase) CreateRecipe(rcp *domain.Recipe) error {
 
 	// Basic Validations
 	if rcp.Name == "" {
@@ -41,13 +41,13 @@ func (s *RecipeUseCase) CreateRecipe(rcp *domain.Recipe) error {
 		return fmt.Errorf("difficulty must be between 0 and 5")
 	}
 
-	return s.port.Create(rcp)
+	return uc.port.Save(rcp)
 }
 
-func (s *RecipeUseCase) DeleteRecipe(id int) error {
+func (uc *RecipeUseCase) DeleteRecipe(id int) error {
 	if id <= 0 {
 		return fmt.Errorf("invalid recipe id")
 	}
 
-	return s.port.Delete(id)
+	return uc.port.Remove(id)
 }
