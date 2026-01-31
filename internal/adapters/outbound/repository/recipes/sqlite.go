@@ -17,8 +17,11 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 		return nil, err
 	}
 
-	repo := &SQLiteRecipesRepo{db: db}
+	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
+		return nil, err
+	}
 
+	repo := &SQLiteRecipesRepo{db: db}
 	if err := repo.init(); err != nil {
 		return nil, err
 	}
