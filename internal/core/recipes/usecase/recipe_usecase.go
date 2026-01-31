@@ -52,7 +52,7 @@ func (uc *RecipeUseCase) Create(cmd CreateRecipeCommand) error {
 		return errors.New("unit must be defined")
 	}
 
-	if cmd.Difficulty <= 0 || cmd.Difficulty > 5 {
+	if cmd.Difficulty < 0 || cmd.Difficulty > 5 {
 		return errors.New("difficulty must be between 0 and 5")
 	}
 
