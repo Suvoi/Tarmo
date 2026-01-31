@@ -1,1 +1,16 @@
 GET http://localhost:9136/recipes/
+
+###
+POST http://localhost:9136/recipes/
+Content-Type: application/json
+
+{
+  "name": "queso",
+  "quantity": 1,
+  "unit": "Pieces",
+  "difficulty": 2
+  
+}
+
+###
+DELETE http://localhost:9136/recipes/4

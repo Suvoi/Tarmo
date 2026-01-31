@@ -3,21 +3,21 @@ package main
 import (
 	"fmt"
 	"log"
-	"tarmo/internal/adapters/repository/recipes"
-	"tarmo/internal/core/recipes/ports"
-	"tarmo/internal/core/recipes/services"
+	"tarmo/internal/adapters/outbound/repository/recipes"
+	"tarmo/internal/core/recipes/ports/outbound"
+	"tarmo/internal/core/recipes/usecase"
 )
 
 func main() {
-	var repo ports.RecipePort
+	var repo outbound.RecipePort
 	repo, err := recipes.NewSQLiteRecipesRepo("data/test.db")
 	if err != nil {
 		log.Fatal("Error opening DB:", err)
 	}
 
-	svc := services.NewRecipeService(repo)
+	uc := usecase.NewRecipeUseCase(repo)
 
-	recipes, err := svc.ListRecipes()
+	recipes, err := uc.ListRecipes()
 	if err != nil {
 		log.Fatal("Error al listar recetas:", err)
 	}

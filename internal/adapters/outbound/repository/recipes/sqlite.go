@@ -28,15 +28,24 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 
 func (r *SQLiteRecipesRepo) init() error {
 	query := `
-	CREATE TABLE IF NOT EXISTS recipes (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		description TEXT,
-		quantity INTEGER,
-		unit TEXT,
-		difficulty TEXT
-	);
-	`
+  CREATE TABLE IF NOT EXISTS recipes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    quantity INTEGER,
+    unit TEXT,
+    difficulty INTEGER
+  );
+  
+  CREATE TABLE IF NOT EXISTS steps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER NOT NULL,
+    step_order INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    instructions TEXT,
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+  );
+  `
 	_, err := r.db.Exec(query)
 	return err
 }
@@ -90,6 +99,25 @@ func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
 		return nil, err
 	}
 
+	stepRows, err := r.db.Query(`
+		SELECT id, step_order, name, instructions
+		FROM steps WHERE recipe_id = ?
+		ORDER BY step_order
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer stepRows.Close()
+	var steps []domain.Step
+	for stepRows.Next() {
+		var step domain.Step
+		if err := stepRows.Scan(&step.ID, &step.Order, &step.Name, &step.Instructions); err != nil {
+			return nil, err
+		}
+		steps = append(steps, step)
+	}
+	rcp.Steps = steps
+
 	return &rcp, nil
 }
 
@@ -98,7 +126,7 @@ func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) error {
 	        INSERT INTO recipes (name, description, quantity, unit, difficulty)
 	        VALUES (?, ?, ?, ?, ?)
 	`
-	_, err := r.db.Exec(query,
+	result, err := r.db.Exec(query,
 		rcp.Name,
 		rcp.Description,
 		rcp.Quantity,
@@ -108,6 +136,20 @@ func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) error {
 	if err != nil {
 		return err
 	}
+
+	recipeID, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	stepQuery := `INSERT INTO steps (recipe_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
+	for _, step := range rcp.Steps {
+		_, err := r.db.Exec(stepQuery, recipeID, step.Order, step.Name, step.Instructions)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
