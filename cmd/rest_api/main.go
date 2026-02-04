@@ -8,7 +8,7 @@ import (
 
 	"tarmo/internal/adapters/inbound/rest/middleware"
 	"tarmo/internal/adapters/inbound/rest/recipes"
-	sqliteRecipes "tarmo/internal/adapters/outbound/repository/recipes"
+	sqliteRecipes "tarmo/internal/adapters/outbound/persistence/sqlite"
 	"tarmo/internal/core/recipes/usecase"
 	"tarmo/internal/lib/logger"
 )

@@ -1,94 +1,90 @@
 package usecase
 
 import (
-	"errors"
-	"fmt"
 	"tarmo/internal/core/recipes/domain"
+	"tarmo/internal/core/recipes/ports/inbound"
 	"tarmo/internal/core/recipes/ports/outbound"
 )
 
-type CreateRecipeCommand struct {
-	Name        string
-	Description string
-	Quantity    int
-	Unit        string
-	Difficulty  int
-	Steps       []CreateStepCommand
-}
-
-type CreateStepCommand struct {
-	Name         string
-	Instructions string
-}
-
 type RecipeUseCase struct {
-	port outbound.RecipeRepositoryPort
+	repo outbound.RecipeRepositoryPort
 }
 
-func NewRecipeUseCase(port outbound.RecipeRepositoryPort) *RecipeUseCase {
-	return &RecipeUseCase{port: port}
+func NewRecipeUseCase(repo outbound.RecipeRepositoryPort) *RecipeUseCase {
+	return &RecipeUseCase{repo: repo}
 }
 
-func (uc *RecipeUseCase) GetAll() ([]*domain.Recipe, error) {
-	return uc.port.FindAll()
-}
-
-func (uc *RecipeUseCase) GetByID(id int) (*domain.Recipe, error) {
-	return uc.port.FindByID(id)
-}
-
-func (uc *RecipeUseCase) Create(cmd CreateRecipeCommand) error {
-
-	// Basic Validations
-	if cmd.Name == "" {
-		return errors.New("name is required")
+func (uc *RecipeUseCase) GetAll() ([]inbound.RecipeDTO, error) {
+	recipes, err := uc.repo.FindAll()
+	if err != nil {
+		return []inbound.RecipeDTO{}, err
 	}
 
-	if cmd.Quantity == 0 {
-		return errors.New("quantity must be greater than 0")
-	}
-
-	if cmd.Unit == "" {
-		return errors.New("unit must be defined")
-	}
-
-	if cmd.Difficulty < 0 || cmd.Difficulty > 5 {
-		return errors.New("difficulty must be between 0 and 5")
-	}
-
-	if len(cmd.Steps) == 0 {
-		return errors.New("recipe must have at least one step")
-	}
-
-	steps := make([]domain.Step, 0, len(cmd.Steps))
-	for i, s := range cmd.Steps {
-		if s.Name == "" {
-			return fmt.Errorf("step %d name is required", i+1)
+	dtos := make([]inbound.RecipeDTO, 0, len(recipes))
+	for _, recipe := range recipes {
+		if recipe == nil {
+			continue
 		}
 
-		steps = append(steps, domain.Step{
-			Order:        i + 1,
-			Name:         s.Name,
-			Instructions: s.Instructions,
+		dtos = append(dtos, inbound.RecipeDTO{
+			ID:          recipe.ID(),
+			Name:        recipe.Name(),
+			Description: recipe.Description(),
+			Quantity:    recipe.Quantity(),
+			Unit:        recipe.Unit(),
+			Difficulty:  recipe.Difficulty(),
 		})
 	}
 
-	recipe := &domain.Recipe{
-		Name:        cmd.Name,
-		Description: cmd.Description,
-		Quantity:    cmd.Quantity,
-		Unit:        cmd.Unit,
-		Difficulty:  cmd.Difficulty,
-		Steps:       steps,
+	return dtos, nil
+}
+
+func (uc *RecipeUseCase) GetByID(id int) (inbound.RecipeDTO, error) {
+	recipe, err := uc.repo.FindByID(id)
+	if err != nil {
+		return inbound.RecipeDTO{}, err
 	}
 
-	return uc.port.Save(recipe)
+	steps := make([]inbound.StepDTO, 0, len(recipe.Steps()))
+	for _, step := range recipe.Steps() {
+		steps = append(steps, inbound.StepDTO{
+			Name:         step.Name(),
+			Instructions: step.Instructions(),
+			Order:        step.Order(),
+		})
+	}
+
+	return inbound.RecipeDTO{
+		ID:          recipe.ID(),
+		Name:        recipe.Name(),
+		Description: recipe.Description(),
+		Quantity:    recipe.Quantity(),
+		Unit:        recipe.Unit(),
+		Difficulty:  recipe.Difficulty(),
+		Steps:       steps,
+	}, nil
+}
+
+func (uc *RecipeUseCase) Create(cmd inbound.CreateRecipeCommand) (int, error) {
+	steps := make([]domain.Step, 0, len(cmd.Steps))
+
+	for i, s := range cmd.Steps {
+		step, err := domain.NewStep(s.Name, s.Instructions, i+1)
+		if err != nil {
+			return 0, err
+		}
+		steps = append(steps, step)
+	}
+
+	recipe, err := domain.NewRecipe(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description)
+	if err != nil {
+		return 0, err
+	}
+
+	return uc.repo.Save(recipe)
+
 }
 
 func (uc *RecipeUseCase) Delete(id int) error {
-	if id <= 0 {
-		return fmt.Errorf("invalid recipe id")
-	}
-
-	return uc.port.Remove(id)
+	return uc.repo.Remove(id)
 }

@@ -5,10 +5,18 @@ import (
 	"net/http"
 	"strconv"
 	"tarmo/internal/adapters/inbound/rest/common"
+	"tarmo/internal/core/recipes"
 	"tarmo/internal/core/recipes/ports/inbound"
-	"tarmo/internal/lib/logger"
 
 	"github.com/go-chi/chi/v5"
+)
+
+var (
+	ErrInternal       = "internal error"
+	ErrInvalidId      = "invalid id"
+	ErrInvalidReq     = "invalid request"
+	ErrInvalidRecipe  = "invalid recipe"
+	ErrRecipeNotFound = "recipe not found"
 )
 
 type Handler struct {
@@ -22,7 +30,7 @@ func NewHandler(service inbound.RecipePort) *Handler {
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	recipes, err := h.service.GetAll()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, ErrInternal, http.StatusInternalServerError)
 		return
 	}
 
@@ -34,40 +42,35 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		http.Error(w, ErrInvalidId, http.StatusBadRequest)
 		return
 	}
 
 	recipe, err := h.service.GetByID(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch err {
+		case recipes.ErrRecipeNotFound:
+			http.Error(w, ErrRecipeNotFound, http.StatusNotFound)
+		default:
+			http.Error(w, ErrInternal, http.StatusInternalServerError)
+		}
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, ToResponse(recipe))
+	common.WriteJSON(w, http.StatusOK, ToResponse(&recipe))
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRecipeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		logger.Error("Failed to decode JSON: %v", err)
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
 		return
 	}
 
-	logger.Info("Received request: %+v", req)
-
-	if req.Name == "" {
-		logger.Error("Name is empty")
-		http.Error(w, "name is required", http.StatusBadRequest)
-		return
-	}
-
-	err := h.service.Create(ToCommand(req))
+	_, err := h.service.Create(ToCommand(req))
 	if err != nil {
-		logger.Error("Service.Create failed: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, ErrInvalidRecipe, http.StatusBadRequest)
 		return
 	}
 
@@ -78,13 +81,18 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		http.Error(w, ErrInvalidId, http.StatusBadRequest)
 		return
 	}
 
 	err = h.service.Delete(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		switch err {
+		case recipes.ErrRecipeNotFound:
+			http.Error(w, ErrRecipeNotFound, http.StatusNotFound)
+		default:
+			http.Error(w, ErrInternal, http.StatusInternalServerError)
+		}
 		return
 	}
 

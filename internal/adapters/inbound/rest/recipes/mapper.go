@@ -1,19 +1,18 @@
 package recipes
 
 import (
-	"tarmo/internal/core/recipes/domain"
-	"tarmo/internal/core/recipes/usecase"
+	"tarmo/internal/core/recipes/ports/inbound"
 )
 
-func ToCommand(req CreateRecipeRequest) usecase.CreateRecipeCommand {
-	steps := make([]usecase.CreateStepCommand, 0, len(req.Steps))
+func ToCommand(req CreateRecipeRequest) inbound.CreateRecipeCommand {
+	steps := make([]inbound.CreateStepCommand, 0, len(req.Steps))
 	for _, s := range req.Steps {
-		steps = append(steps, usecase.CreateStepCommand{
+		steps = append(steps, inbound.CreateStepCommand{
 			Name:         s.Name,
 			Instructions: s.Instructions,
 		})
 	}
-	return usecase.CreateRecipeCommand{
+	return inbound.CreateRecipeCommand{
 		Name:        req.Name,
 		Description: req.Description,
 		Quantity:    req.Quantity,
@@ -23,38 +22,37 @@ func ToCommand(req CreateRecipeRequest) usecase.CreateRecipeCommand {
 	}
 }
 
-func ToResponse(r *domain.Recipe) RecipeResponse {
-	steps := make([]StepResponse, 0, len(r.Steps))
-	for _, s := range r.Steps {
-		steps = append(steps, StepResponse{
-			ID:           s.ID,
+func ToResponse(dto *inbound.RecipeDTO) RecipeJSONResponse {
+	steps := make([]StepJSONResponse, len(dto.Steps))
+	for i, s := range dto.Steps {
+		steps[i] = StepJSONResponse{
 			Order:        s.Order,
 			Name:         s.Name,
 			Instructions: s.Instructions,
-		})
+		}
 	}
 
-	return RecipeResponse{
-		ID:          r.ID,
-		Name:        r.Name,
-		Description: r.Description,
-		Quantity:    r.Quantity,
-		Unit:        r.Unit,
-		Difficulty:  r.Difficulty,
+	return RecipeJSONResponse{
+		ID:          dto.ID,
+		Name:        dto.Name,
+		Description: dto.Description,
+		Quantity:    dto.Quantity,
+		Unit:        dto.Unit,
+		Difficulty:  dto.Difficulty,
 		Steps:       steps,
 	}
 }
 
-func ToListItemResponse(r *domain.Recipe) RecipeListResponse {
-	return RecipeListResponse{
+func ToListItemResponse(r inbound.RecipeDTO) RecipeListJSONResponse {
+	return RecipeListJSONResponse{
 		ID:          r.ID,
 		Name:        r.Name,
 		Description: r.Description,
 	}
 }
 
-func ToResponseList(recipes []*domain.Recipe) []RecipeListResponse {
-	res := make([]RecipeListResponse, 0, len(recipes))
+func ToResponseList(recipes []inbound.RecipeDTO) []RecipeListJSONResponse {
+	res := make([]RecipeListJSONResponse, 0, len(recipes))
 	for _, r := range recipes {
 		res = append(res, ToListItemResponse(r))
 	}
