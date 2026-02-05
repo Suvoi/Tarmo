@@ -9,15 +9,18 @@ import (
 	"tarmo/internal/adapters/inbound/rest/middleware"
 	"tarmo/internal/adapters/inbound/rest/recipes"
 	sqliteRecipes "tarmo/internal/adapters/outbound/persistence/sqlite"
+	"tarmo/internal/config"
 	"tarmo/internal/core/recipes/usecase"
 	"tarmo/internal/lib/logger"
 )
 
 func main() {
-	logger.Info("Starting Tarmo rest API on port 9136")
+	cfg := config.Load()
+
+	logger.Info("Starting Tarmo on port %s", cfg.Port)
 
 	// DB adapter
-	repo, err := sqliteRecipes.NewSQLiteRecipesRepo("data/db.sqlite")
+	repo, err := sqliteRecipes.NewSQLiteRecipesRepo(cfg.DBPath)
 	if err != nil {
 		logger.Fatal("failed to connect db: %v", err)
 		return
@@ -34,7 +37,7 @@ func main() {
 	r.Use(middleware.Logging)
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   cfg.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
@@ -45,7 +48,7 @@ func main() {
 		recipes.RegisterRoutes(r, handler)
 	})
 
-	err = http.ListenAndServe(":9136", r)
+	err = http.ListenAndServe(":"+cfg.Port, r)
 	if err != nil {
 		logger.Fatal("server error: %v", err)
 		return
