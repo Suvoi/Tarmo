@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"tarmo/internal/core/events"
 	"tarmo/internal/core/recipes/domain"
 	"tarmo/internal/core/recipes/ports/inbound"
 	"tarmo/internal/core/recipes/ports/outbound"
@@ -8,6 +9,7 @@ import (
 
 type RecipeUseCase struct {
 	repo outbound.RecipeRepositoryPort
+	bus  events.EventBus
 }
 
 func NewRecipeUseCase(repo outbound.RecipeRepositoryPort) *RecipeUseCase {
@@ -66,14 +68,9 @@ func (uc *RecipeUseCase) GetByID(id int) (inbound.RecipeDTO, error) {
 }
 
 func (uc *RecipeUseCase) Create(cmd inbound.CreateRecipeCommand) (int, error) {
-	steps := make([]domain.Step, 0, len(cmd.Steps))
-
-	for i, s := range cmd.Steps {
-		step, err := domain.NewStep(s.Name, s.Instructions, i+1)
-		if err != nil {
-			return 0, err
-		}
-		steps = append(steps, step)
+	steps, err := mapStepsToDomain(cmd.Steps)
+	if err != nil {
+		return 0, err
 	}
 
 	recipe, err := domain.NewRecipe(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description)
@@ -85,6 +82,34 @@ func (uc *RecipeUseCase) Create(cmd inbound.CreateRecipeCommand) (int, error) {
 
 }
 
+func (uc *RecipeUseCase) Update(cmd inbound.UpdateRecipeCommand) error {
+	recipe, err := uc.repo.FindByID(cmd.ID)
+	if err != nil {
+		return err
+	}
+
+	steps, err := mapStepsToDomain(cmd.Steps)
+	if err != nil {
+		return err
+	}
+
+	recipe.Update(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description)
+
+	return uc.repo.Update(recipe)
+}
+
 func (uc *RecipeUseCase) Delete(id int) error {
 	return uc.repo.Remove(id)
+}
+
+func mapStepsToDomain(dtos []inbound.StepCommand) ([]domain.Step, error) {
+	steps := make([]domain.Step, 0, len(dtos))
+	for i, s := range dtos {
+		step, err := domain.NewStep(s.Name, s.Instructions, i+1)
+		if err != nil {
+			return nil, err
+		}
+		steps = append(steps, step)
+	}
+	return steps, nil
 }

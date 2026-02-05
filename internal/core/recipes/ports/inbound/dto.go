@@ -6,26 +6,36 @@ type CreateRecipeCommand struct {
 	Quantity    int
 	Unit        string
 	Difficulty  int
-	Steps       []CreateStepCommand
+	Steps       []StepCommand
 }
 
-type CreateStepCommand struct {
+type UpdateRecipeCommand struct {
+	ID          int
+	Name        string
+	Description string
+	Quantity    int
+	Unit        string
+	Difficulty  int
+	Steps       []StepCommand
+}
+
+type StepCommand struct {
 	Name         string
 	Instructions string
 }
 
 type RecipeDTO struct {
-	ID int
-	Name string
+	ID          int
+	Name        string
 	Description string
-	Quantity int
-	Unit string
-	Difficulty int
-	Steps []StepDTO
+	Quantity    int
+	Unit        string
+	Difficulty  int
+	Steps       []StepDTO
 }
 
 type StepDTO struct {
-	Name string
+	Name         string
 	Instructions string
-	Order int
+	Order        int
 }

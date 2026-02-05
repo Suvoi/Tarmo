@@ -8,5 +8,6 @@ type RecipeRepositoryPort interface {
 	FindAll() ([]*domain.Recipe, error)
 	FindByID(id int) (*domain.Recipe, error)
 	Save(rcp *domain.Recipe) (int, error)
+	Update(rcp *domain.Recipe) error
 	Remove(id int) error
 }

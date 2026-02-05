@@ -61,20 +61,51 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	var req CreateRecipeRequest
+	var req CreateRecipeRequestDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
 		return
 	}
 
-	_, err := h.service.Create(ToCommand(req))
+	_, err := h.service.Create(ToCreateCommand(req))
 	if err != nil {
 		http.Error(w, ErrInvalidRecipe, http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
+		return
+	}
+
+	var req UpdateRecipeRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
+		return
+	}
+
+	cmd := ToUpdateCommand(req)
+	cmd.ID = id
+
+	err = h.service.Update(cmd)
+	if err != nil {
+		switch err {
+		case recipes.ErrRecipeNotFound:
+			http.Error(w, ErrRecipeNotFound, http.StatusNotFound)
+		default:
+			http.Error(w, ErrInternal, http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {

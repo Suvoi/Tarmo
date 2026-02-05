@@ -203,7 +203,6 @@ func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
 }
 
 func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) (int, error) {
-
 	// Begin transaction
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -250,6 +249,53 @@ func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) (int, error) {
 	}
 
 	return int(recipeID), nil
+}
+
+func (r *SQLiteRecipesRepo) Update(rcp *domain.Recipe) error {
+	// Begin transaction
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	query := `
+        UPDATE recipes 
+        SET name = ?, description = ?, quantity = ?, unit = ?, difficulty = ?
+        WHERE id = ?
+    `
+	_, err = tx.Exec(query,
+		rcp.Name(),
+		rcp.Description(),
+		rcp.Quantity(),
+		rcp.Unit(),
+		rcp.Difficulty(),
+		rcp.ID(),
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("DELETE FROM steps WHERE recipe_id = ?", rcp.ID())
+	if err != nil {
+		return err
+	}
+
+	stepQuery := `INSERT INTO steps (recipe_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
+	for _, step := range rcp.Steps() {
+		_, err = tx.Exec(stepQuery, rcp.ID(), step.Order(), step.Name(), step.Instructions())
+		if err != nil {
+			return err
+		}
+	}
+
+	// No errors, commit
+	return tx.Commit()
 }
 
 func (r *SQLiteRecipesRepo) Remove(id int) error {

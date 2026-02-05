@@ -111,6 +111,23 @@ func ReconstructRecipe(
 	return r, nil
 }
 
+// ===========================METHODS===========================
+func (r *Recipe) Update(name string, quantity int, unit string, difficulty int, steps []Step, description string) error {
+	temp, err := NewRecipe(name, quantity, unit, difficulty, steps, description)
+	if err != nil {
+		return err
+	}
+
+	r.name = temp.name
+	r.quantity = temp.quantity
+	r.unit = temp.unit
+	r.difficulty = temp.difficulty
+	r.steps = temp.steps
+	r.description = temp.description
+
+	return nil
+}
+
 // ===========================VALIDATORS========================
 
 func (r *Recipe) Validate() error {

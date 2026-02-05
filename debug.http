@@ -2,7 +2,7 @@ GET http://localhost:9136/recipes
 
 ###
 
-GET http://localhost:9136/recipes/14
+GET http://localhost:9136/recipes/1
 
 ###
 POST http://localhost:9136/recipes
@@ -16,6 +16,24 @@ Content-Type: application/json
   "difficulty": 2,
   "steps": [
     {"name": "paconi", "instructions": "rumano"},
+    {"name": "trippie", "instructions": "es un mojon"}
+  ]
+  
+}
+
+###
+
+PUT http://localhost:9136/recipes/1
+Content-Type: application/json
+
+{
+  "name": "queso",
+  "description": "Top 3 hijos que sus padres estan abandonados",
+  "quantity": 1,
+  "unit": "Pieces",
+  "difficulty": 5,
+  "steps": [
+    {"name": "PACACACACANOI", "instructions": "rumano"},
     {"name": "trippie", "instructions": "es un mojon"}
   ]
   
