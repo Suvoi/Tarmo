@@ -1,0 +1,243 @@
+components:
+  schemas:
+    CreateRecipeRequestDTO:
+      properties:
+        description:
+          type: string
+        difficulty:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+        steps:
+          items:
+            properties:
+              instructions:
+                type: string
+              name:
+                type: string
+            type: object
+          type: array
+        unit:
+          type: string
+      type: object
+    RecipeJSONResponseDTO:
+      properties:
+        description:
+          type: string
+        difficulty:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+        steps:
+          items:
+            properties:
+              instructions:
+                type: string
+              name:
+                type: string
+              order:
+                type: integer
+            type: object
+          type: array
+        unit:
+          type: string
+      type: object
+    RecipeListJSONResponseDTO:
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+      type: object
+    StepDTO:
+      properties:
+        instructions:
+          type: string
+        name:
+          type: string
+      type: object
+    StepJSONResponseDTO:
+      properties:
+        instructions:
+          type: string
+        name:
+          type: string
+        order:
+          type: integer
+      type: object
+    UpdateRecipeRequestDTO:
+      properties:
+        description:
+          type: string
+        difficulty:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+        steps:
+          items:
+            $ref: '#/components/schemas/StepDTO'
+          type: array
+        unit:
+          type: string
+      type: object
+info:
+  description: Optimize and control batches based on recipes.
+  title: Tarmo API
+  version: 2.1.0
+openapi: 3.0.0
+paths:
+  /recipes:
+    get:
+      description: ' Get a list of all recipes in the collection'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeListJSONResponseDTO'
+          description: ""
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: internal error
+    post:
+      description: ' Add a new recipe to the collection'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeRequestDTO'
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: invalid request
+  /recipes/{id}:
+    delete:
+      description: ' Remove a recipe from the collection'
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Recipe ID
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: invalid id
+        "404":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: recipe not found
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: internal error
+    get:
+      description: ' Get detailed information about a single recipe'
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Recipe ID
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeJSONResponseDTO'
+          description: ""
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: invalid id
+        "404":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: recipe not found
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: internal error
+    put:
+      description: ' Update an existing recipe''s information'
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        schema:
+          description: Recipe ID
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecipeRequestDTO'
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: invalid request
+        "404":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: recipe not found
+        "500":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: internal error
+servers:
+- description: Default Server URL
+  url: /

@@ -14,6 +14,11 @@ import (
 	"tarmo/internal/lib/logger"
 )
 
+// @title Tarmo API
+// @version 2.1.0
+// @description Optimize and control batches based on recipes.
+// @host localhost:9136
+// @BasePath /
 func main() {
 	cfg := config.Load()
 

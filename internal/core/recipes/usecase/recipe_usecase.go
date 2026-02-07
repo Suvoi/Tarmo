@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"tarmo/internal/core/events"
 	"tarmo/internal/core/recipes/domain"
 	"tarmo/internal/core/recipes/ports/inbound"
 	"tarmo/internal/core/recipes/ports/outbound"
@@ -9,7 +8,6 @@ import (
 
 type RecipeUseCase struct {
 	repo outbound.RecipeRepositoryPort
-	bus  events.EventBus
 }
 
 func NewRecipeUseCase(repo outbound.RecipeRepositoryPort) *RecipeUseCase {
@@ -78,8 +76,8 @@ func (uc *RecipeUseCase) Create(cmd inbound.CreateRecipeCommand) (int, error) {
 		return 0, err
 	}
 
-	return uc.repo.Save(recipe)
-
+	id, err := uc.repo.Save(recipe)
+	return id, err
 }
 
 func (uc *RecipeUseCase) Update(cmd inbound.UpdateRecipeCommand) error {
