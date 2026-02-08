@@ -1,6 +1,6 @@
 package inbound
 
-type CreateRecipeCommand struct {
+type CreateTemplateCommand struct {
 	Name        string
 	Description string
 	Quantity    int
@@ -9,7 +9,7 @@ type CreateRecipeCommand struct {
 	Steps       []StepCommand
 }
 
-type UpdateRecipeCommand struct {
+type UpdateTemplateCommand struct {
 	ID          int
 	Name        string
 	Description string
@@ -24,7 +24,7 @@ type StepCommand struct {
 	Instructions string
 }
 
-type RecipeDTO struct {
+type TemplateDTO struct {
 	ID          int
 	Name        string
 	Description string

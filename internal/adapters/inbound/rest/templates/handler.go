@@ -1,61 +1,61 @@
-package recipes
+package templates
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"tarmo/internal/adapters/inbound/rest/common"
-	"tarmo/internal/core/recipes"
-	"tarmo/internal/core/recipes/ports/inbound"
+	"tarmo/internal/core/templates"
+	"tarmo/internal/core/templates/ports/inbound"
 
 	"github.com/go-chi/chi/v5"
 )
 
 var (
-	ErrInternal       = "internal error"
-	ErrInvalidId      = "invalid id"
-	ErrInvalidReq     = "invalid request"
-	ErrInvalidRecipe  = "invalid recipe"
-	ErrRecipeNotFound = "recipe not found"
+	ErrInternal         = "internal error"
+	ErrInvalidId        = "invalid id"
+	ErrInvalidReq       = "invalid request"
+	ErrInvalidTemplate  = "invalid template"
+	ErrTemplateNotFound = "template not found"
 )
 
 type Handler struct {
-	service inbound.RecipePort
+	service inbound.TemplatePort
 }
 
-func NewHandler(service inbound.RecipePort) *Handler {
+func NewHandler(service inbound.TemplatePort) *Handler {
 	return &Handler{service: service}
 }
 
-// GetAll recipes
-// @Summary      List all recipes
-// @Description  Get a list of all recipes in the collection
-// @Tags         recipes
+// GetAll templates
+// @Summary      List all templates
+// @Description  Get a list of all templates in the collection
+// @Tags         templates
 // @Produce      json
-// @Success      200  {array}   RecipeListJSONResponseDTO
+// @Success      200  {array}   TemplateListJSONResponseDTO
 // @Failure      500  {string}  string "internal error"
-// @Router       /recipes [get]
+// @Router       /templates [get]
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
-	recipes, err := h.service.GetAll()
+	templates, err := h.service.GetAll()
 	if err != nil {
 		http.Error(w, ErrInternal, http.StatusInternalServerError)
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, ToResponseList(recipes))
+	common.WriteJSON(w, http.StatusOK, ToResponseList(templates))
 }
 
-// GetByID recipe
-// @Summary      Get a recipe by ID
-// @Description  Get detailed information about a single recipe
-// @Tags         recipes
+// GetByID template
+// @Summary      Get a template by ID
+// @Description  Get detailed information about a single template
+// @Tags         templates
 // @Produce      json
-// @Param        id   path      int  true  "Recipe ID"
-// @Success      200  {object}  RecipeJSONResponseDTO
+// @Param        id   path      int  true  "Template ID"
+// @Success      200  {object}  TemplateJSONResponseDTO
 // @Failure      400  {string}  string "invalid id"
-// @Failure      404  {string}  string "recipe not found"
+// @Failure      404  {string}  string "template not found"
 // @Failure      500  {string}  string "internal error"
-// @Router       /recipes/{id} [get]
+// @Router       /templates/{id} [get]
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
@@ -65,32 +65,32 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recipe, err := h.service.GetByID(id)
+	template, err := h.service.GetByID(id)
 	if err != nil {
 		switch err {
-		case recipes.ErrRecipeNotFound:
-			http.Error(w, ErrRecipeNotFound, http.StatusNotFound)
+		case templates.ErrTemplateNotFound:
+			http.Error(w, ErrTemplateNotFound, http.StatusNotFound)
 		default:
 			http.Error(w, ErrInternal, http.StatusInternalServerError)
 		}
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, ToResponse(&recipe))
+	common.WriteJSON(w, http.StatusOK, ToResponse(&template))
 }
 
-// Create recipe
-// @Summary      Create a new recipe
-// @Description  Add a new recipe to the collection
-// @Tags         recipes
+// Create template
+// @Summary      Create a new template
+// @Description  Add a new template to the collection
+// @Tags         templates
 // @Accept       json
 // @Produce      json
-// @Param        recipe  body  CreateRecipeRequestDTO  true  "Recipe object"
+// @Param        template  body  CreateTemplateRequestDTO  true  "Template object"
 // @Success      201     "Created"
 // @Failure      400     {string}  string "invalid request"
-// @Router       /recipes [post]
+// @Router       /templates [post]
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	var req CreateRecipeRequestDTO
+	var req CreateTemplateRequestDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
@@ -99,26 +99,26 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	_, err := h.service.Create(ToCreateCommand(req))
 	if err != nil {
-		http.Error(w, ErrInvalidRecipe, http.StatusBadRequest)
+		http.Error(w, ErrInvalidTemplate, http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 }
 
-// Update recipe
-// @Summary      Update a recipe
-// @Description  Update an existing recipe's information
-// @Tags         recipes
+// Update template
+// @Summary      Update a template
+// @Description  Update an existing template's information
+// @Tags         templates
 // @Accept       json
 // @Produce      json
-// @Param        id      path  int                     true  "Recipe ID"
-// @Param        recipe  body  UpdateRecipeRequestDTO  true  "Updated recipe object"
+// @Param        id      path  int                     true  "Template ID"
+// @Param        template  body  UpdateTemplateRequestDTO  true  "Updated template object"
 // @Success      200     "OK"
 // @Failure      400     {string}  string "invalid request"
-// @Failure      404     {string}  string "recipe not found"
+// @Failure      404     {string}  string "template not found"
 // @Failure      500     {string}  string "internal error"
-// @Router       /recipes/{id} [put]
+// @Router       /templates/{id} [put]
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
@@ -127,7 +127,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req UpdateRecipeRequestDTO
+	var req UpdateTemplateRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
 		return
@@ -139,8 +139,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Update(cmd)
 	if err != nil {
 		switch err {
-		case recipes.ErrRecipeNotFound:
-			http.Error(w, ErrRecipeNotFound, http.StatusNotFound)
+		case templates.ErrTemplateNotFound:
+			http.Error(w, ErrTemplateNotFound, http.StatusNotFound)
 		default:
 			http.Error(w, ErrInternal, http.StatusInternalServerError)
 		}
@@ -150,16 +150,16 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Delete recipe
-// @Summary      Delete a recipe
-// @Description  Remove a recipe from the collection
-// @Tags         recipes
-// @Param        id   path  int  true  "Recipe ID"
+// Delete template
+// @Summary      Delete a template
+// @Description  Remove a template from the collection
+// @Tags         templates
+// @Param        id   path  int  true  "Template ID"
 // @Success      204  "No Content"
 // @Failure      400  {string}  string "invalid id"
-// @Failure      404  {string}  string "recipe not found"
+// @Failure      404  {string}  string "template not found"
 // @Failure      500  {string}  string "internal error"
-// @Router       /recipes/{id} [delete]
+// @Router       /templates/{id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
@@ -171,8 +171,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Delete(id)
 	if err != nil {
 		switch err {
-		case recipes.ErrRecipeNotFound:
-			http.Error(w, ErrRecipeNotFound, http.StatusNotFound)
+		case templates.ErrTemplateNotFound:
+			http.Error(w, ErrTemplateNotFound, http.StatusNotFound)
 		default:
 			http.Error(w, ErrInternal, http.StatusInternalServerError)
 		}

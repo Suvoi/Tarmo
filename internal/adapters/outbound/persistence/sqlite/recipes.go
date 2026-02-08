@@ -3,17 +3,17 @@ package sqlite
 import (
 	"database/sql"
 	"errors"
-	"tarmo/internal/core/recipes"
-	"tarmo/internal/core/recipes/domain"
+	"tarmo/internal/core/templates"
+	"tarmo/internal/core/templates/domain"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SQLiteRecipesRepo struct {
+type SQLiteTemplatesRepo struct {
 	db *sql.DB
 }
 
-func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
+func NewSQLiteTemplatesRepo(dbPath string) (*SQLiteTemplatesRepo, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 		return nil, err
 	}
 
-	repo := &SQLiteRecipesRepo{db: db}
+	repo := &SQLiteTemplatesRepo{db: db}
 	if err := repo.init(); err != nil {
 		return nil, err
 	}
@@ -31,9 +31,9 @@ func NewSQLiteRecipesRepo(dbPath string) (*SQLiteRecipesRepo, error) {
 	return repo, nil
 }
 
-func (r *SQLiteRecipesRepo) init() error {
+func (r *SQLiteTemplatesRepo) init() error {
 	query := `
-  CREATE TABLE IF NOT EXISTS recipes (
+  CREATE TABLE IF NOT EXISTS templates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
@@ -44,33 +44,33 @@ func (r *SQLiteRecipesRepo) init() error {
   
   CREATE TABLE IF NOT EXISTS steps (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    recipe_id INTEGER NOT NULL,
+    template_id INTEGER NOT NULL,
     step_order INTEGER NOT NULL,
     name TEXT NOT NULL,
     instructions TEXT,
-    FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+    FOREIGN KEY (template_id) REFERENCES templates(id) ON DELETE CASCADE
   );
   `
 	_, err := r.db.Exec(query)
 	return err
 }
 
-func (r *SQLiteRecipesRepo) FindAll() ([]*domain.Recipe, error) {
-	// Get all recipes
+func (r *SQLiteTemplatesRepo) FindAll() ([]*domain.Template, error) {
+	// Get all templates
 	rows, err := r.db.Query(`
 		SELECT id, name, description, quantity, unit, difficulty
-		FROM recipes
+		FROM templates
 	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var recipes []*domain.Recipe
+	var templates []*domain.Template
 
 	for rows.Next() {
 		var (
-			recipeID    int
+			templateID  int
 			name        string
 			description string
 			quantity    int
@@ -78,16 +78,16 @@ func (r *SQLiteRecipesRepo) FindAll() ([]*domain.Recipe, error) {
 			difficulty  int
 		)
 
-		if err := rows.Scan(&recipeID, &name, &description, &quantity, &unit, &difficulty); err != nil {
+		if err := rows.Scan(&templateID, &name, &description, &quantity, &unit, &difficulty); err != nil {
 			return nil, err
 		}
 
-		// Get steps for this recipe
+		// Get steps for this template
 		stepRows, err := r.db.Query(`
 			SELECT step_order, name, instructions
-			FROM steps WHERE recipe_id = ?
+			FROM steps WHERE template_id = ?
 			ORDER BY step_order
-		`, recipeID)
+		`, templateID)
 		if err != nil {
 			return nil, err
 		}
@@ -117,9 +117,9 @@ func (r *SQLiteRecipesRepo) FindAll() ([]*domain.Recipe, error) {
 			return nil, err
 		}
 
-		// Reconstruct recipe with steps
-		recipe, err := domain.ReconstructRecipe(
-			recipeID,
+		// Reconstruct template with steps
+		template, err := domain.ReconstructTemplate(
+			templateID,
 			name,
 			quantity,
 			unit,
@@ -131,22 +131,22 @@ func (r *SQLiteRecipesRepo) FindAll() ([]*domain.Recipe, error) {
 			return nil, err
 		}
 
-		recipes = append(recipes, recipe)
+		templates = append(templates, template)
 	}
 
-	return recipes, rows.Err()
+	return templates, rows.Err()
 }
 
-func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
-	// Search recipe
+func (r *SQLiteTemplatesRepo) FindByID(id int) (*domain.Template, error) {
+	// Search template
 	row := r.db.QueryRow(`
 			SELECT id, name, description, quantity, unit, difficulty
-			FROM recipes WHERE id=?
+			FROM templates WHERE id=?
 	`, id)
 
 	// Temp variables
 	var (
-		recipeID    int
+		templateID  int
 		name        string
 		description string
 		quantity    int
@@ -154,19 +154,19 @@ func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
 		difficulty  int
 	)
 
-	err := row.Scan(&recipeID, &name, &description, &quantity, &unit, &difficulty)
+	err := row.Scan(&templateID, &name, &description, &quantity, &unit, &difficulty)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, recipes.ErrRecipeNotFound // Not found
+			return nil, templates.ErrTemplateNotFound // Not found
 		}
 		return nil, err
 	}
 
 	stepRows, err := r.db.Query(`
 		SELECT step_order, name, instructions
-		FROM steps WHERE recipe_id = ?
+		FROM steps WHERE template_id = ?
 		ORDER BY step_order
-	`, recipeID)
+	`, templateID)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +191,8 @@ func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
 	}
 
 	// Reconstruct
-	return domain.ReconstructRecipe(
-		recipeID,
+	return domain.ReconstructTemplate(
+		templateID,
 		name,
 		quantity,
 		unit,
@@ -202,7 +202,7 @@ func (r *SQLiteRecipesRepo) FindByID(id int) (*domain.Recipe, error) {
 	)
 }
 
-func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) (int, error) {
+func (r *SQLiteTemplatesRepo) Save(tmpl *domain.Template) (int, error) {
 	// Begin transaction
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -216,28 +216,28 @@ func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) (int, error) {
 	}()
 
 	query := `
-	        INSERT INTO recipes (name, description, quantity, unit, difficulty)
+	        INSERT INTO templates (name, description, quantity, unit, difficulty)
 	        VALUES (?, ?, ?, ?, ?)
 	`
 	result, err := tx.Exec(query,
-		rcp.Name(),
-		rcp.Description(),
-		rcp.Quantity(),
-		rcp.Unit(),
-		rcp.Difficulty(),
+		tmpl.Name(),
+		tmpl.Description(),
+		tmpl.Quantity(),
+		tmpl.Unit(),
+		tmpl.Difficulty(),
 	)
 	if err != nil {
 		return 0, err
 	}
 
-	recipeID, err := result.LastInsertId()
+	templateID, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
 
-	stepQuery := `INSERT INTO steps (recipe_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
-	for _, step := range rcp.Steps() {
-		_, err := tx.Exec(stepQuery, recipeID, step.Order(), step.Name(), step.Instructions())
+	stepQuery := `INSERT INTO steps (template_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
+	for _, step := range tmpl.Steps() {
+		_, err := tx.Exec(stepQuery, templateID, step.Order(), step.Name(), step.Instructions())
 		if err != nil {
 			return 0, err
 		}
@@ -248,10 +248,10 @@ func (r *SQLiteRecipesRepo) Save(rcp *domain.Recipe) (int, error) {
 		return 0, err
 	}
 
-	return int(recipeID), nil
+	return int(templateID), nil
 }
 
-func (r *SQLiteRecipesRepo) Update(rcp *domain.Recipe) error {
+func (r *SQLiteTemplatesRepo) Update(tmpl *domain.Template) error {
 	// Begin transaction
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -265,30 +265,30 @@ func (r *SQLiteRecipesRepo) Update(rcp *domain.Recipe) error {
 	}()
 
 	query := `
-        UPDATE recipes 
+        UPDATE templates 
         SET name = ?, description = ?, quantity = ?, unit = ?, difficulty = ?
         WHERE id = ?
     `
 	_, err = tx.Exec(query,
-		rcp.Name(),
-		rcp.Description(),
-		rcp.Quantity(),
-		rcp.Unit(),
-		rcp.Difficulty(),
-		rcp.ID(),
+		tmpl.Name(),
+		tmpl.Description(),
+		tmpl.Quantity(),
+		tmpl.Unit(),
+		tmpl.Difficulty(),
+		tmpl.ID(),
 	)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec("DELETE FROM steps WHERE recipe_id = ?", rcp.ID())
+	_, err = tx.Exec("DELETE FROM steps WHERE template_id = ?", tmpl.ID())
 	if err != nil {
 		return err
 	}
 
-	stepQuery := `INSERT INTO steps (recipe_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
-	for _, step := range rcp.Steps() {
-		_, err = tx.Exec(stepQuery, rcp.ID(), step.Order(), step.Name(), step.Instructions())
+	stepQuery := `INSERT INTO steps (template_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
+	for _, step := range tmpl.Steps() {
+		_, err = tx.Exec(stepQuery, tmpl.ID(), step.Order(), step.Name(), step.Instructions())
 		if err != nil {
 			return err
 		}
@@ -298,9 +298,9 @@ func (r *SQLiteRecipesRepo) Update(rcp *domain.Recipe) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteRecipesRepo) Remove(id int) error {
+func (r *SQLiteTemplatesRepo) Remove(id int) error {
 	result, err := r.db.Exec(`
-		DELETE FROM recipes WHERE id = ?
+		DELETE FROM templates WHERE id = ?
 	`, id)
 	if err != nil {
 		return err
@@ -312,7 +312,7 @@ func (r *SQLiteRecipesRepo) Remove(id int) error {
 	}
 
 	if rowsAffected == 0 {
-		return recipes.ErrRecipeNotFound
+		return templates.ErrTemplateNotFound
 	}
 
 	return nil

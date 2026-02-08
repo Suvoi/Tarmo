@@ -1,4 +1,4 @@
-package recipes
+package templates
 
 type StepJSONResponseDTO struct {
 	Order        int    `json:"order"`
@@ -6,7 +6,7 @@ type StepJSONResponseDTO struct {
 	Instructions string `json:"instructions"`
 }
 
-type RecipeJSONResponseDTO struct {
+type TemplateJSONResponseDTO struct {
 	ID          int                   `json:"id"`
 	Name        string                `json:"name"`
 	Description string                `json:"description"`
@@ -16,13 +16,13 @@ type RecipeJSONResponseDTO struct {
 	Steps       []StepJSONResponseDTO `json:"steps"`
 }
 
-type RecipeListJSONResponseDTO struct {
+type TemplateListJSONResponseDTO struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-type CreateRecipeRequestDTO struct {
+type CreateTemplateRequestDTO struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Quantity    int       `json:"quantity"`
@@ -31,7 +31,7 @@ type CreateRecipeRequestDTO struct {
 	Steps       []StepDTO `json:"steps"`
 }
 
-type UpdateRecipeRequestDTO struct {
+type UpdateTemplateRequestDTO struct {
 	ID          int       `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`

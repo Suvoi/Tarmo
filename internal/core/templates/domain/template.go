@@ -10,13 +10,13 @@ var (
 	ErrQuantityInvalid   = errors.New("quantity must be greater than 0")
 	ErrUnitRequired      = errors.New("unit must be defined")
 	ErrDifficultyInvalid = errors.New("difficulty must be between 0 and 5")
-	ErrNoSteps           = errors.New("recipe must have at least one step")
+	ErrNoSteps           = errors.New("template must have at least one step")
 	ErrInvalidStepOrders = errors.New("step orders must be sequential starting from 1")
 	ErrStepName          = errors.New("step must have a name")
 	ErrStepOrder         = errors.New("step order must be greater than 0")
 )
 
-type Recipe struct {
+type Template struct {
 	id          int
 	name        string // Required
 	description string
@@ -34,13 +34,13 @@ type Step struct {
 
 // ===========================GETTERS===========================
 
-func (r *Recipe) ID() int             { return r.id }
-func (r *Recipe) Name() string        { return r.name }
-func (r *Recipe) Description() string { return r.description }
-func (r *Recipe) Quantity() int       { return r.quantity }
-func (r *Recipe) Unit() string        { return r.unit }
-func (r *Recipe) Difficulty() int     { return r.difficulty }
-func (r *Recipe) Steps() []Step       { return append([]Step(nil), r.steps...) }
+func (r *Template) ID() int             { return r.id }
+func (r *Template) Name() string        { return r.name }
+func (r *Template) Description() string { return r.description }
+func (r *Template) Quantity() int       { return r.quantity }
+func (r *Template) Unit() string        { return r.unit }
+func (r *Template) Difficulty() int     { return r.difficulty }
+func (r *Template) Steps() []Step       { return append([]Step(nil), r.steps...) }
 
 func (s *Step) Order() int           { return s.order }
 func (s *Step) Name() string         { return s.name }
@@ -60,15 +60,15 @@ func NewStep(name, instructions string, order int) (Step, error) {
 	return s, nil
 }
 
-func NewRecipe(
+func NewTemplate(
 	name string,
 	quantity int,
 	unit string,
 	difficulty int,
 	steps []Step,
 	description string,
-) (*Recipe, error) {
-	r := &Recipe{
+) (*Template, error) {
+	r := &Template{
 		id:          0,
 		name:        name,
 		quantity:    quantity,
@@ -85,7 +85,7 @@ func NewRecipe(
 	return r, nil
 }
 
-func ReconstructRecipe(
+func ReconstructTemplate(
 	id int,
 	name string,
 	quantity int,
@@ -93,8 +93,8 @@ func ReconstructRecipe(
 	difficulty int,
 	steps []Step,
 	description string,
-) (*Recipe, error) {
-	r := &Recipe{
+) (*Template, error) {
+	r := &Template{
 		id:          id,
 		name:        name,
 		quantity:    quantity,
@@ -112,8 +112,8 @@ func ReconstructRecipe(
 }
 
 // ===========================METHODS===========================
-func (r *Recipe) Update(name string, quantity int, unit string, difficulty int, steps []Step, description string) error {
-	temp, err := NewRecipe(name, quantity, unit, difficulty, steps, description)
+func (r *Template) Update(name string, quantity int, unit string, difficulty int, steps []Step, description string) error {
+	temp, err := NewTemplate(name, quantity, unit, difficulty, steps, description)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (r *Recipe) Update(name string, quantity int, unit string, difficulty int, 
 
 // ===========================VALIDATORS========================
 
-func (r *Recipe) Validate() error {
+func (r *Template) Validate() error {
 	if r.name == "" {
 		return ErrNameRequired
 	}
