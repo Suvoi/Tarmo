@@ -7,16 +7,18 @@ import (
 	"github.com/go-chi/cors"
 
 	"tarmo/internal/adapters/inbound/rest/middleware"
+	"tarmo/internal/adapters/inbound/rest/resources"
 	"tarmo/internal/adapters/inbound/rest/templates"
-	sqliteTemplates "tarmo/internal/adapters/outbound/persistence/sqlite"
+	"tarmo/internal/adapters/outbound/persistence/sqlite"
 	"tarmo/internal/config"
-	"tarmo/internal/core/templates/usecase"
+	resourceUseCase "tarmo/internal/core/resources/usecase"
+	templateUseCase "tarmo/internal/core/templates/usecase"
 	"tarmo/internal/lib/logger"
 )
 
 // @title Tarmo API
 // @version 2.1.0
-// @description Optimize and control batches based on templates.
+// @description Optimize and control processes based on templates.
 // @host localhost:9136
 // @BasePath /
 func main() {
@@ -24,18 +26,24 @@ func main() {
 
 	logger.Info("Starting Tarmo on port %s", cfg.Port)
 
-	// DB adapter
-	repo, err := sqliteTemplates.NewSQLiteTemplatesRepo(cfg.DBPath)
+	// DB connection
+	db, err := sqlite.NewSQLiteDB(cfg.DBPath)
 	if err != nil {
 		logger.Fatal("failed to connect db: %v", err)
 		return
 	}
 
-	// Usecase
-	uc := usecase.NewTemplateUseCase(repo)
+	// Repositories
+	templateRepo := sqlite.NewTemplateRepository(db)
+	resourceRepo := sqlite.NewResourceRepository(db)
 
-	// Handler REST
-	handler := templates.NewHandler(uc)
+	// Use cases
+	templateUC := templateUseCase.NewTemplateUseCase(templateRepo)
+	resUC := resourceUseCase.NewResourceUseCase(resourceRepo)
+
+	// Handlers
+	templateHandler := templates.NewHandler(templateUC)
+	resourceHandler := resources.NewHandler(resUC)
 
 	// Router
 	r := chi.NewRouter()
@@ -50,7 +58,8 @@ func main() {
 	}))
 
 	r.Route("/", func(r chi.Router) {
-		templates.RegisterRoutes(r, handler)
+		templates.RegisterRoutes(r, templateHandler)
+		resources.RegisterRoutes(r, resourceHandler)
 	})
 
 	err = http.ListenAndServe(":"+cfg.Port, r)

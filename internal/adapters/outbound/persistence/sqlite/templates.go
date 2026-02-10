@@ -3,59 +3,20 @@ package sqlite
 import (
 	"database/sql"
 	"errors"
+	"tarmo/internal/core/shared"
 	"tarmo/internal/core/templates"
 	"tarmo/internal/core/templates/domain"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
-type SQLiteTemplatesRepo struct {
+type templateRepository struct {
 	db *sql.DB
 }
 
-func NewSQLiteTemplatesRepo(dbPath string) (*SQLiteTemplatesRepo, error) {
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-		return nil, err
-	}
-
-	repo := &SQLiteTemplatesRepo{db: db}
-	if err := repo.init(); err != nil {
-		return nil, err
-	}
-
-	return repo, nil
+func NewTemplateRepository(db *SQLiteDB) *templateRepository {
+	return &templateRepository{db: db.db}
 }
 
-func (r *SQLiteTemplatesRepo) init() error {
-	query := `
-  CREATE TABLE IF NOT EXISTS templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    description TEXT,
-    quantity INTEGER,
-    unit TEXT,
-    difficulty INTEGER
-  );
-  
-  CREATE TABLE IF NOT EXISTS steps (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    template_id INTEGER NOT NULL,
-    step_order INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    instructions TEXT,
-    FOREIGN KEY (template_id) REFERENCES templates(id) ON DELETE CASCADE
-  );
-  `
-	_, err := r.db.Exec(query)
-	return err
-}
-
-func (r *SQLiteTemplatesRepo) FindAll() ([]*domain.Template, error) {
+func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 	// Get all templates
 	rows, err := r.db.Query(`
 		SELECT id, name, description, quantity, unit, difficulty
@@ -74,7 +35,7 @@ func (r *SQLiteTemplatesRepo) FindAll() ([]*domain.Template, error) {
 			name        string
 			description string
 			quantity    int
-			unit        string
+			unit        shared.Unit
 			difficulty  int
 		)
 
@@ -117,6 +78,33 @@ func (r *SQLiteTemplatesRepo) FindAll() ([]*domain.Template, error) {
 			return nil, err
 		}
 
+		resourceRefs := []domain.ResourceRef{}
+		resourceRows, err := r.db.Query(`
+		SELECT resource_id, quantity, unit
+		FROM template_resources WHERE template_id = ?
+	`, templateID)
+		if err != nil {
+			return nil, err
+		}
+		defer resourceRows.Close()
+
+		for resourceRows.Next() {
+			var (
+				resourceID int
+				quantity   int
+				unit       shared.Unit
+			)
+			if err := resourceRows.Scan(&resourceID, &quantity, &unit); err != nil {
+				return nil, err
+			}
+
+			resourceRef, err := domain.NewResourceRef(resourceID, quantity, unit)
+			if err != nil {
+				return nil, err // Invalid resource ref
+			}
+			resourceRefs = append(resourceRefs, resourceRef)
+		}
+
 		// Reconstruct template with steps
 		template, err := domain.ReconstructTemplate(
 			templateID,
@@ -126,6 +114,7 @@ func (r *SQLiteTemplatesRepo) FindAll() ([]*domain.Template, error) {
 			difficulty,
 			steps,
 			description,
+			resourceRefs,
 		)
 		if err != nil {
 			return nil, err
@@ -137,7 +126,7 @@ func (r *SQLiteTemplatesRepo) FindAll() ([]*domain.Template, error) {
 	return templates, rows.Err()
 }
 
-func (r *SQLiteTemplatesRepo) FindByID(id int) (*domain.Template, error) {
+func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 	// Search template
 	row := r.db.QueryRow(`
 			SELECT id, name, description, quantity, unit, difficulty
@@ -150,7 +139,7 @@ func (r *SQLiteTemplatesRepo) FindByID(id int) (*domain.Template, error) {
 		name        string
 		description string
 		quantity    int
-		unit        string
+		unit        shared.Unit
 		difficulty  int
 	)
 
@@ -190,6 +179,33 @@ func (r *SQLiteTemplatesRepo) FindByID(id int) (*domain.Template, error) {
 		steps = append(steps, step)
 	}
 
+	resourceRefs := []domain.ResourceRef{}
+	resourceRows, err := r.db.Query(`
+		SELECT resource_id, quantity, unit
+		FROM template_resources WHERE template_id = ?
+	`, templateID)
+	if err != nil {
+		return nil, err
+	}
+	defer resourceRows.Close()
+
+	for resourceRows.Next() {
+		var (
+			resourceID int
+			quantity   int
+			unit       shared.Unit
+		)
+		if err := resourceRows.Scan(&resourceID, &quantity, &unit); err != nil {
+			return nil, err
+		}
+
+		resourceRef, err := domain.NewResourceRef(resourceID, quantity, unit)
+		if err != nil {
+			return nil, err // Invalid resource ref
+		}
+		resourceRefs = append(resourceRefs, resourceRef)
+	}
+
 	// Reconstruct
 	return domain.ReconstructTemplate(
 		templateID,
@@ -199,10 +215,11 @@ func (r *SQLiteTemplatesRepo) FindByID(id int) (*domain.Template, error) {
 		difficulty,
 		steps,
 		description,
+		resourceRefs,
 	)
 }
 
-func (r *SQLiteTemplatesRepo) Save(tmpl *domain.Template) (int, error) {
+func (r *templateRepository) Save(tmpl *domain.Template) (int, error) {
 	// Begin transaction
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -243,6 +260,14 @@ func (r *SQLiteTemplatesRepo) Save(tmpl *domain.Template) (int, error) {
 		}
 	}
 
+	resourceQuery := `INSERT INTO template_resources (template_id, resource_id, quantity, unit) VALUES (?, ?, ?, ?)`
+	for _, resource := range tmpl.Resources() {
+		_, err := tx.Exec(resourceQuery, templateID, resource.ResourceID(), resource.Quantity(), resource.Unit())
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	// No errors, commit
 	if err = tx.Commit(); err != nil {
 		return 0, err
@@ -251,7 +276,7 @@ func (r *SQLiteTemplatesRepo) Save(tmpl *domain.Template) (int, error) {
 	return int(templateID), nil
 }
 
-func (r *SQLiteTemplatesRepo) Update(tmpl *domain.Template) error {
+func (r *templateRepository) Update(tmpl *domain.Template) error {
 	// Begin transaction
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -294,11 +319,24 @@ func (r *SQLiteTemplatesRepo) Update(tmpl *domain.Template) error {
 		}
 	}
 
+	_, err = tx.Exec("DELETE FROM template_resources WHERE template_id = ?", tmpl.ID())
+	if err != nil {
+		return err
+	}
+
+	resourceQuery := `INSERT INTO template_resources (template_id, resource_id, quantity, unit) VALUES (?, ?, ?, ?)`
+	for _, resource := range tmpl.Resources() {
+		_, err := tx.Exec(resourceQuery, tmpl.ID(), resource.ResourceID(), resource.Quantity(), resource.Unit())
+		if err != nil {
+			return err
+		}
+	}
+
 	// No errors, commit
 	return tx.Commit()
 }
 
-func (r *SQLiteTemplatesRepo) Remove(id int) error {
+func (r *templateRepository) Remove(id int) error {
 	result, err := r.db.Exec(`
 		DELETE FROM templates WHERE id = ?
 	`, id)

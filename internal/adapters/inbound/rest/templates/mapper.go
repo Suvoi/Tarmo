@@ -12,6 +12,14 @@ func ToCreateCommand(req CreateTemplateRequestDTO) inbound.CreateTemplateCommand
 			Instructions: s.Instructions,
 		})
 	}
+	resources := make([]inbound.ResourceRefCommand, 0, len(req.Resources))
+	for _, r := range req.Resources {
+		resources = append(resources, inbound.ResourceRefCommand{
+			ResourceID: r.ResourceID,
+			Quantity:   r.Quantity,
+			Unit:       r.Unit,
+		})
+	}
 	return inbound.CreateTemplateCommand{
 		Name:        req.Name,
 		Description: req.Description,
@@ -19,6 +27,7 @@ func ToCreateCommand(req CreateTemplateRequestDTO) inbound.CreateTemplateCommand
 		Unit:        req.Unit,
 		Difficulty:  req.Difficulty,
 		Steps:       steps,
+		Resources:   resources,
 	}
 }
 
@@ -30,6 +39,14 @@ func ToUpdateCommand(req UpdateTemplateRequestDTO) inbound.UpdateTemplateCommand
 			Instructions: s.Instructions,
 		})
 	}
+	resources := make([]inbound.ResourceRefCommand, 0, len(req.Resources))
+	for _, r := range req.Resources {
+		resources = append(resources, inbound.ResourceRefCommand{
+			ResourceID: r.ResourceID,
+			Quantity:   r.Quantity,
+			Unit:       r.Unit,
+		})
+	}
 	return inbound.UpdateTemplateCommand{
 		ID:          req.ID,
 		Name:        req.Name,
@@ -38,6 +55,7 @@ func ToUpdateCommand(req UpdateTemplateRequestDTO) inbound.UpdateTemplateCommand
 		Unit:        req.Unit,
 		Difficulty:  req.Difficulty,
 		Steps:       steps,
+		Resources:   resources,
 	}
 }
 
@@ -51,14 +69,24 @@ func ToResponse(dto *inbound.TemplateDTO) TemplateJSONResponseDTO {
 		}
 	}
 
+	resources := make([]ResourceRefResponseDTO, len(dto.Resources))
+	for i, r := range dto.Resources {
+		resources[i] = ResourceRefResponseDTO{
+			ResourceID: r.ResourceID,
+			Quantity:   r.Quantity,
+			Unit:       string(r.Unit),
+		}
+	}
+
 	return TemplateJSONResponseDTO{
 		ID:          dto.ID,
 		Name:        dto.Name,
 		Description: dto.Description,
 		Quantity:    dto.Quantity,
-		Unit:        dto.Unit,
+		Unit:        string(dto.Unit),
 		Difficulty:  dto.Difficulty,
 		Steps:       steps,
+		Resources:   resources,
 	}
 }
 

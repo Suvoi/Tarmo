@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"tarmo/internal/core/shared"
 	"tarmo/internal/core/templates/domain"
 	"tarmo/internal/core/templates/ports/inbound"
 	"tarmo/internal/core/templates/ports/outbound"
@@ -33,6 +34,7 @@ func (uc *TemplateUseCase) GetAll() ([]inbound.TemplateDTO, error) {
 			Quantity:    template.Quantity(),
 			Unit:        template.Unit(),
 			Difficulty:  template.Difficulty(),
+			Resources:   mapResourcesToDTO(template.Resources()),
 		})
 	}
 
@@ -62,6 +64,7 @@ func (uc *TemplateUseCase) GetByID(id int) (inbound.TemplateDTO, error) {
 		Unit:        template.Unit(),
 		Difficulty:  template.Difficulty(),
 		Steps:       steps,
+		Resources:   mapResourcesToDTO(template.Resources()),
 	}, nil
 }
 
@@ -71,7 +74,12 @@ func (uc *TemplateUseCase) Create(cmd inbound.CreateTemplateCommand) (int, error
 		return 0, err
 	}
 
-	template, err := domain.NewTemplate(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description)
+	resources, err := mapResourcesToDomain(cmd.Resources)
+	if err != nil {
+		return 0, err
+	}
+
+	template, err := domain.NewTemplate(cmd.Name, cmd.Quantity, shared.Unit(cmd.Unit), cmd.Difficulty, steps, cmd.Description, resources)
 	if err != nil {
 		return 0, err
 	}
@@ -91,7 +99,15 @@ func (uc *TemplateUseCase) Update(cmd inbound.UpdateTemplateCommand) error {
 		return err
 	}
 
-	template.Update(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description)
+	resources, err := mapResourcesToDomain(cmd.Resources)
+	if err != nil {
+		return err
+	}
+
+	err = template.Update(cmd.Name, cmd.Quantity, shared.Unit(cmd.Unit), cmd.Difficulty, steps, cmd.Description, resources)
+	if err != nil {
+		return err
+	}
 
 	return uc.repo.Update(template)
 }
@@ -110,4 +126,28 @@ func mapStepsToDomain(dtos []inbound.StepCommand) ([]domain.Step, error) {
 		steps = append(steps, step)
 	}
 	return steps, nil
+}
+
+func mapResourcesToDomain(dtos []inbound.ResourceRefCommand) ([]domain.ResourceRef, error) {
+	resources := make([]domain.ResourceRef, 0, len(dtos))
+	for _, r := range dtos {
+		ref, err := domain.NewResourceRef(r.ResourceID, r.Quantity, shared.Unit(r.Unit))
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, ref)
+	}
+	return resources, nil
+}
+
+func mapResourcesToDTO(resources []domain.ResourceRef) []inbound.ResourceRefDTO {
+	dtos := make([]inbound.ResourceRefDTO, 0, len(resources))
+	for _, r := range resources {
+		dtos = append(dtos, inbound.ResourceRefDTO{
+			ResourceID: r.ResourceID(),
+			Quantity:   r.Quantity(),
+			Unit:       r.Unit(),
+		})
+	}
+	return dtos
 }

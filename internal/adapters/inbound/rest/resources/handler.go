@@ -1,12 +1,12 @@
-package templates
+package resources
 
 import (
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"tarmo/internal/adapters/inbound/rest/common"
-	"tarmo/internal/core/templates"
-	"tarmo/internal/core/templates/ports/inbound"
+	"tarmo/internal/core/resources"
+	"tarmo/internal/core/resources/ports/inbound"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -15,47 +15,47 @@ var (
 	ErrInternal         = "internal error"
 	ErrInvalidId        = "invalid id"
 	ErrInvalidReq       = "invalid request"
-	ErrInvalidTemplate  = "invalid template"
-	ErrTemplateNotFound = "template not found"
+	ErrInvalidResource  = "invalid resource"
+	ErrResourceNotFound = "resource not found"
 )
 
 type Handler struct {
-	service inbound.TemplatePort
+	service inbound.ResourcePort
 }
 
-func NewHandler(service inbound.TemplatePort) *Handler {
+func NewHandler(service inbound.ResourcePort) *Handler {
 	return &Handler{service: service}
 }
 
-// GetAll templates
-// @Summary      List all templates
-// @Description  Get a list of all templates in the collection
-// @Tags         templates
+// GetAll resources
+// @Summary      List all resources
+// @Description  Get a list of all resources in the collection
+// @Tags         resources
 // @Produce      json
-// @Success      200  {array}   TemplateListJSONResponseDTO
+// @Success      200  {array}   ResourceJSONResponseDTO
 // @Failure      500  {string}  string "internal error"
-// @Router       /templates [get]
+// @Router       /resources [get]
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
-	templates, err := h.service.GetAll()
+	resources, err := h.service.GetAll()
 	if err != nil {
 		http.Error(w, ErrInternal, http.StatusInternalServerError)
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, ToResponseList(templates))
+	common.WriteJSON(w, http.StatusOK, ToResponseList(resources))
 }
 
-// GetByID template
-// @Summary      Get a template by ID
-// @Description  Get detailed information about a single template
-// @Tags         templates
+// GetByID resource
+// @Summary      Get a resource by ID
+// @Description  Get detailed information about a single resource
+// @Tags         resources
 // @Produce      json
-// @Param        id   path      int  true  "Template ID"
-// @Success      200  {object}  TemplateJSONResponseDTO
+// @Param        id   path      int  true  "Resource ID"
+// @Success      200  {object}  ResourceJSONResponseDTO
 // @Failure      400  {string}  string "invalid id"
-// @Failure      404  {string}  string "template not found"
+// @Failure      404  {string}  string "resource not found"
 // @Failure      500  {string}  string "internal error"
-// @Router       /templates/{id} [get]
+// @Router       /resources/{id} [get]
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	idStr := chi.URLParam(r, "id")
@@ -65,32 +65,32 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	template, err := h.service.GetByID(id)
+	resource, err := h.service.GetByID(id)
 	if err != nil {
 		switch err {
-		case templates.ErrTemplateNotFound:
-			http.Error(w, ErrTemplateNotFound, http.StatusNotFound)
+		case resources.ErrResourceNotFound:
+			http.Error(w, ErrResourceNotFound, http.StatusNotFound)
 		default:
 			http.Error(w, ErrInternal, http.StatusInternalServerError)
 		}
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, ToResponse(&template))
+	common.WriteJSON(w, http.StatusOK, ToResponse(&resource))
 }
 
-// Create template
-// @Summary      Create a new template
-// @Description  Add a new template to the collection
-// @Tags         templates
+// Create resource
+// @Summary      Create a new resource
+// @Description  Add a new resource to the collection
+// @Tags         resources
 // @Accept       json
 // @Produce      json
-// @Param        template  body  CreateTemplateRequestDTO  true  "Template object"
+// @Param        resource  body  CreateResourceRequestDTO  true  "Resource object"
 // @Success      201     "Created"
 // @Failure      400     {string}  string "invalid request"
-// @Router       /templates [post]
+// @Router       /resources [post]
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	var req CreateTemplateRequestDTO
+	var req CreateResourceRequestDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
@@ -106,19 +106,19 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-// Update template
-// @Summary      Update a template
-// @Description  Update an existing template's information
-// @Tags         templates
+// Update resource
+// @Summary      Update a resource
+// @Description  Update an existing resource's information
+// @Tags         resources
 // @Accept       json
 // @Produce      json
-// @Param        id      path  int                     true  "Template ID"
-// @Param        template  body  UpdateTemplateRequestDTO  true  "Updated template object"
+// @Param        id      path  int                     true  "Resource ID"
+// @Param        resource  body  UpdateResourceRequestDTO  true  "Updated resource object"
 // @Success      200     "OK"
 // @Failure      400     {string}  string "invalid request"
 // @Failure      404     {string}  string "template not found"
 // @Failure      500     {string}  string "internal error"
-// @Router       /templates/{id} [put]
+// @Router       /resources/{id} [put]
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
@@ -127,7 +127,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req UpdateTemplateRequestDTO
+	var req UpdateResourceRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, ErrInvalidReq, http.StatusBadRequest)
 		return
@@ -139,7 +139,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Update(cmd)
 	if err != nil {
 		switch err {
-		case templates.ErrTemplateNotFound:
+		case resources.ErrResourceNotFound:
 			http.Error(w, err.Error(), http.StatusNotFound)
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -150,16 +150,16 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Delete template
-// @Summary      Delete a template
-// @Description  Remove a template from the collection
-// @Tags         templates
-// @Param        id   path  int  true  "Template ID"
+// Delete resource
+// @Summary      Delete a resource
+// @Description  Remove a resource from the collection
+// @Tags         resources
+// @Param        id   path  int  true  "Resource ID"
 // @Success      204  "No Content"
 // @Failure      400  {string}  string "invalid id"
-// @Failure      404  {string}  string "template not found"
+// @Failure      404  {string}  string "resource not found"
 // @Failure      500  {string}  string "internal error"
-// @Router       /templates/{id} [delete]
+// @Router       /resources/{id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
@@ -171,8 +171,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	err = h.service.Delete(id)
 	if err != nil {
 		switch err {
-		case templates.ErrTemplateNotFound:
-			http.Error(w, ErrTemplateNotFound, http.StatusNotFound)
+		case resources.ErrResourceNotFound:
+			http.Error(w, ErrResourceNotFound, http.StatusNotFound)
 		default:
 			http.Error(w, ErrInternal, http.StatusInternalServerError)
 		}

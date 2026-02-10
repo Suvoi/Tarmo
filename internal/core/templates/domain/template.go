@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"tarmo/internal/core/shared"
 )
 
 // Error variables
@@ -14,39 +15,64 @@ var (
 	ErrInvalidStepOrders = errors.New("step orders must be sequential starting from 1")
 	ErrStepName          = errors.New("step must have a name")
 	ErrStepOrder         = errors.New("step order must be greater than 0")
+	ErrResourceIDInvalid = errors.New("resource ID must be greater than 0")
 )
 
 type Template struct {
 	id          int
-	name        string // Required
+	name        string // [REQUIRED]
 	description string
-	quantity    int    // Required
-	unit        string // Required
-	difficulty  int    // Required
-	steps       []Step
+	quantity    int         // [REQUIRED]
+	unit        shared.Unit // [REQUIRED]
+	difficulty  int         // [REQUIRED]
+	steps       []Step      // [REQUIRED] MIN 1
+	resources   []ResourceRef
 }
 
 type Step struct {
-	order        int    // Required
-	name         string // Required
+	order        int    // [REQUIRED]
+	name         string // [REQUIRED]
 	instructions string
+}
+
+type ResourceRef struct {
+	resourceID int // [REQUIRED]
+	quantity   int // [REQUIRED]
+	unit       shared.Unit
 }
 
 // ===========================GETTERS===========================
 
-func (r *Template) ID() int             { return r.id }
-func (r *Template) Name() string        { return r.name }
-func (r *Template) Description() string { return r.description }
-func (r *Template) Quantity() int       { return r.quantity }
-func (r *Template) Unit() string        { return r.unit }
-func (r *Template) Difficulty() int     { return r.difficulty }
-func (r *Template) Steps() []Step       { return append([]Step(nil), r.steps...) }
+func (t *Template) ID() int                  { return t.id }
+func (t *Template) Name() string             { return t.name }
+func (t *Template) Description() string      { return t.description }
+func (t *Template) Quantity() int            { return t.quantity }
+func (t *Template) Unit() shared.Unit        { return t.unit }
+func (t *Template) Difficulty() int          { return t.difficulty }
+func (t *Template) Steps() []Step            { return append([]Step(nil), t.steps...) }
+func (t *Template) Resources() []ResourceRef { return append([]ResourceRef(nil), t.resources...) }
 
 func (s *Step) Order() int           { return s.order }
 func (s *Step) Name() string         { return s.name }
 func (s *Step) Instructions() string { return s.instructions }
 
+func (rr *ResourceRef) ResourceID() int   { return rr.resourceID }
+func (rr *ResourceRef) Quantity() int     { return rr.quantity }
+func (rr *ResourceRef) Unit() shared.Unit { return rr.unit }
+
 // ===========================CONSTRUCTORS======================
+
+func NewResourceRef(resourceID int, quantity int, unit shared.Unit) (ResourceRef, error) {
+	rr := ResourceRef{
+		resourceID: resourceID,
+		quantity:   quantity,
+		unit:       unit,
+	}
+	if err := rr.Validate(); err != nil {
+		return ResourceRef{}, err
+	}
+	return rr, nil
+}
 
 func NewStep(name, instructions string, order int) (Step, error) {
 	s := Step{
@@ -63,10 +89,11 @@ func NewStep(name, instructions string, order int) (Step, error) {
 func NewTemplate(
 	name string,
 	quantity int,
-	unit string,
+	unit shared.Unit,
 	difficulty int,
 	steps []Step,
 	description string,
+	resources []ResourceRef,
 ) (*Template, error) {
 	r := &Template{
 		id:          0,
@@ -76,6 +103,7 @@ func NewTemplate(
 		difficulty:  difficulty,
 		steps:       steps,
 		description: description,
+		resources:   resources,
 	}
 
 	if err := r.Validate(); err != nil {
@@ -89,12 +117,13 @@ func ReconstructTemplate(
 	id int,
 	name string,
 	quantity int,
-	unit string,
+	unit shared.Unit,
 	difficulty int,
 	steps []Step,
 	description string,
+	resources []ResourceRef,
 ) (*Template, error) {
-	r := &Template{
+	t := &Template{
 		id:          id,
 		name:        name,
 		quantity:    quantity,
@@ -102,52 +131,64 @@ func ReconstructTemplate(
 		difficulty:  difficulty,
 		steps:       steps,
 		description: description,
+		resources:   resources,
 	}
 
-	if err := r.Validate(); err != nil {
+	if err := t.Validate(); err != nil {
 		return nil, err
 	}
 
-	return r, nil
+	return t, nil
 }
 
 // ===========================METHODS===========================
-func (r *Template) Update(name string, quantity int, unit string, difficulty int, steps []Step, description string) error {
-	temp, err := NewTemplate(name, quantity, unit, difficulty, steps, description)
+func (t *Template) Update(name string, quantity int, unit shared.Unit, difficulty int, steps []Step, description string, resources []ResourceRef) error {
+	temp, err := NewTemplate(name, quantity, unit, difficulty, steps, description, resources)
 	if err != nil {
 		return err
 	}
 
-	r.name = temp.name
-	r.quantity = temp.quantity
-	r.unit = temp.unit
-	r.difficulty = temp.difficulty
-	r.steps = temp.steps
-	r.description = temp.description
+	t.name = temp.name
+	t.quantity = temp.quantity
+	t.unit = temp.unit
+	t.difficulty = temp.difficulty
+	t.steps = temp.steps
+	t.description = temp.description
+	t.resources = temp.resources
 
+	return nil
+}
+
+func (t *Template) UpdateResources(resources []ResourceRef) error {
+	for _, resource := range resources {
+		if err := resource.Validate(); err != nil {
+			return err
+		}
+	}
+	t.resources = resources
 	return nil
 }
 
 // ===========================VALIDATORS========================
 
-func (r *Template) Validate() error {
-	if r.name == "" {
+func (t *Template) Validate() error {
+	if t.name == "" {
 		return ErrNameRequired
 	}
-	if r.quantity <= 0 {
+	if t.quantity <= 0 {
 		return ErrQuantityInvalid
 	}
-	if r.unit == "" {
+	if t.unit == "" {
 		return ErrUnitRequired
 	}
-	if r.difficulty < 0 || r.difficulty > 5 {
+	if t.difficulty < 0 || t.difficulty > 5 {
 		return ErrDifficultyInvalid
 	}
-	if len(r.steps) == 0 {
+	if len(t.steps) == 0 {
 		return ErrNoSteps
 	}
 
-	for i, step := range r.steps {
+	for i, step := range t.steps {
 		expectedOrder := i + 1
 		if step.order != expectedOrder {
 			return ErrInvalidStepOrders
@@ -170,5 +211,18 @@ func (s *Step) Validate() error {
 		return ErrStepName
 	}
 
+	return nil
+}
+
+func (rr *ResourceRef) Validate() error {
+	if rr.resourceID <= 0 {
+		return ErrResourceIDInvalid
+	}
+	if rr.quantity <= 0 {
+		return ErrQuantityInvalid
+	}
+	if rr.unit == "" {
+		return ErrUnitRequired
+	}
 	return nil
 }
