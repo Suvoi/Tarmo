@@ -5,7 +5,8 @@ import (
 	"tarmo/internal/core/shared"
 )
 
-// Error variables
+// ===========================ERRORS============================
+
 var (
 	ErrNameRequired      = errors.New("name is required")
 	ErrQuantityInvalid   = errors.New("quantity must be greater than 0")
@@ -18,11 +19,13 @@ var (
 	ErrResourceIDInvalid = errors.New("resource ID must be greater than 0")
 )
 
+// ===========================MODELS============================
+
 type Template struct {
 	id          int
 	name        string // [REQUIRED]
 	description string
-	quantity    int         // [REQUIRED]
+	quantity    float64     // [REQUIRED]
 	unit        shared.Unit // [REQUIRED]
 	difficulty  int         // [REQUIRED]
 	steps       []Step      // [REQUIRED] MIN 1
@@ -36,9 +39,9 @@ type Step struct {
 }
 
 type ResourceRef struct {
-	resourceID int // [REQUIRED]
-	quantity   int // [REQUIRED]
-	unit       shared.Unit
+	resourceID int         // [REQUIRED]
+	quantity   float64     // [REQUIRED]
+	unit       shared.Unit // [REQUIRED]
 }
 
 // ===========================GETTERS===========================
@@ -46,7 +49,7 @@ type ResourceRef struct {
 func (t *Template) ID() int                  { return t.id }
 func (t *Template) Name() string             { return t.name }
 func (t *Template) Description() string      { return t.description }
-func (t *Template) Quantity() int            { return t.quantity }
+func (t *Template) Quantity() float64        { return t.quantity }
 func (t *Template) Unit() shared.Unit        { return t.unit }
 func (t *Template) Difficulty() int          { return t.difficulty }
 func (t *Template) Steps() []Step            { return append([]Step(nil), t.steps...) }
@@ -57,12 +60,12 @@ func (s *Step) Name() string         { return s.name }
 func (s *Step) Instructions() string { return s.instructions }
 
 func (rr *ResourceRef) ResourceID() int   { return rr.resourceID }
-func (rr *ResourceRef) Quantity() int     { return rr.quantity }
+func (rr *ResourceRef) Quantity() float64 { return rr.quantity }
 func (rr *ResourceRef) Unit() shared.Unit { return rr.unit }
 
 // ===========================CONSTRUCTORS======================
 
-func NewResourceRef(resourceID int, quantity int, unit shared.Unit) (ResourceRef, error) {
+func NewResourceRef(resourceID int, quantity float64, unit shared.Unit) (ResourceRef, error) {
 	rr := ResourceRef{
 		resourceID: resourceID,
 		quantity:   quantity,
@@ -88,7 +91,7 @@ func NewStep(name, instructions string, order int) (Step, error) {
 
 func NewTemplate(
 	name string,
-	quantity int,
+	quantity float64,
 	unit shared.Unit,
 	difficulty int,
 	steps []Step,
@@ -116,7 +119,7 @@ func NewTemplate(
 func ReconstructTemplate(
 	id int,
 	name string,
-	quantity int,
+	quantity float64,
 	unit shared.Unit,
 	difficulty int,
 	steps []Step,
@@ -142,7 +145,7 @@ func ReconstructTemplate(
 }
 
 // ===========================METHODS===========================
-func (t *Template) Update(name string, quantity int, unit shared.Unit, difficulty int, steps []Step, description string, resources []ResourceRef) error {
+func (t *Template) Update(name string, quantity float64, unit shared.Unit, difficulty int, steps []Step, description string, resources []ResourceRef) error {
 	temp, err := NewTemplate(name, quantity, unit, difficulty, steps, description, resources)
 	if err != nil {
 		return err
@@ -178,7 +181,7 @@ func (t *Template) Validate() error {
 	if t.quantity <= 0 {
 		return ErrQuantityInvalid
 	}
-	if t.unit == "" {
+	if t.unit.Name == "" {
 		return ErrUnitRequired
 	}
 	if t.difficulty < 0 || t.difficulty > 5 {
@@ -221,8 +224,9 @@ func (rr *ResourceRef) Validate() error {
 	if rr.quantity <= 0 {
 		return ErrQuantityInvalid
 	}
-	if rr.unit == "" {
+	if rr.unit.Name == "" {
 		return ErrUnitRequired
 	}
+
 	return nil
 }

@@ -4,7 +4,9 @@ Content-Type: application/json
 {
   "name": "cheese",
   "description": "cheese bruh",
-  "price": 100
+  "price": 100,
+  "quantity": 0.1,
+  "unit": "pcs"
 }
 
 ### 

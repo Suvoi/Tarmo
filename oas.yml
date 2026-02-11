@@ -2,6 +2,10 @@ components:
   schemas:
     CreateResourceRequestDTO:
       properties:
+        base_quantity:
+          type: number
+        base_unit:
+          type: string
         description:
           type: string
         name:
@@ -18,7 +22,7 @@ components:
         name:
           type: string
         quantity:
-          type: integer
+          type: number
         resources:
           items:
             $ref: "#/components/schemas/ResourceRefDTO"
@@ -32,6 +36,10 @@ components:
       type: object
     ResourceJSONResponseDTO:
       properties:
+        base_quantity:
+          type: number
+        base_unit:
+          type: string
         description:
           type: string
         id:
@@ -44,7 +52,7 @@ components:
     ResourceRefDTO:
       properties:
         quantity:
-          type: integer
+          type: number
         resource_id:
           type: integer
         unit:
@@ -53,7 +61,7 @@ components:
     ResourceRefResponseDTO:
       properties:
         quantity:
-          type: integer
+          type: number
         resource_id:
           type: integer
         unit:
@@ -86,7 +94,7 @@ components:
         name:
           type: string
         quantity:
-          type: integer
+          type: number
         resources:
           items:
             $ref: "#/components/schemas/ResourceRefResponseDTO"
@@ -109,6 +117,10 @@ components:
       type: object
     UpdateResourceRequestDTO:
       properties:
+        base_quantity:
+          type: number
+        base_unit:
+          type: string
         description:
           type: string
         id:
@@ -129,7 +141,7 @@ components:
         name:
           type: string
         quantity:
-          type: integer
+          type: number
         resources:
           items:
             $ref: "#/components/schemas/ResourceRefDTO"

@@ -9,6 +9,8 @@ func ToCreateCommand(req CreateResourceRequestDTO) inbound.CreateResourceCommand
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       req.Price,
+		Quantity:    req.Quantity,
+		Unit:        req.Unit,
 	}
 }
 
@@ -18,16 +20,20 @@ func ToUpdateCommand(req UpdateResourceRequestDTO) inbound.UpdateResourceCommand
 		Name:        req.Name,
 		Description: req.Description,
 		Price:       req.Price,
+		Quantity:    req.Quantity,
+		Unit:        req.Unit,
 	}
 }
 
 func ToResponse(dto *inbound.ResourceDTO) ResourceJSONResponseDTO {
 
 	return ResourceJSONResponseDTO{
-		ID:          dto.ID,
-		Name:        dto.Name,
-		Description: dto.Description,
-		Price:       dto.Price,
+		ID:           dto.ID,
+		Name:         dto.Name,
+		Description:  dto.Description,
+		Price:        dto.Price,
+		BaseQuantity: dto.Quantity.Value,
+		BaseUnit:     dto.Quantity.Unit.Name,
 	}
 }
 

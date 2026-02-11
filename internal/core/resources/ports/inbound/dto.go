@@ -4,6 +4,8 @@ type CreateResourceCommand struct {
 	Name        string
 	Description string
 	Price       int
+	Quantity    float64
+	Unit        string
 }
 
 type UpdateResourceCommand struct {
@@ -11,6 +13,8 @@ type UpdateResourceCommand struct {
 	Name        string
 	Description string
 	Price       int
+	Quantity    float64
+	Unit        string
 }
 
 type ResourceDTO struct {
@@ -18,4 +22,14 @@ type ResourceDTO struct {
 	Name        string
 	Description string
 	Price       int
+	Quantity    QuantityDTO
+}
+
+type QuantityDTO struct {
+	Value float64
+	Unit  UnitDTO
+}
+
+type UnitDTO struct {
+	Name string
 }

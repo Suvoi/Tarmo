@@ -34,7 +34,7 @@ func (r *SQLiteDB) init() error {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    quantity INTEGER,
+    quantity REAL,
     unit TEXT,
     difficulty INTEGER
   );
@@ -43,7 +43,7 @@ func (r *SQLiteDB) init() error {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     template_id INTEGER NOT NULL,
     resource_id INTEGER NOT NULL,
-    quantity INTEGER,
+    quantity REAL,
     unit TEXT,
     FOREIGN KEY (template_id) REFERENCES templates(id) ON DELETE CASCADE,
     FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE
@@ -62,7 +62,9 @@ func (r *SQLiteDB) init() error {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    price INTEGER
+    price INTEGER,
+    base_quantity REAL,
+    base_unit TEXT
   );
 
   

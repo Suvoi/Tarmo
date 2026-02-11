@@ -34,7 +34,7 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 			templateID  int
 			name        string
 			description string
-			quantity    int
+			quantity    float64
 			unit        shared.Unit
 			difficulty  int
 		)
@@ -91,7 +91,7 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 		for resourceRows.Next() {
 			var (
 				resourceID int
-				quantity   int
+				quantity   float64
 				unit       shared.Unit
 			)
 			if err := resourceRows.Scan(&resourceID, &quantity, &unit); err != nil {
@@ -138,7 +138,7 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 		templateID  int
 		name        string
 		description string
-		quantity    int
+		quantity    float64
 		unit        shared.Unit
 		difficulty  int
 	)
@@ -192,7 +192,7 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 	for resourceRows.Next() {
 		var (
 			resourceID int
-			quantity   int
+			quantity   float64
 			unit       shared.Unit
 		)
 		if err := resourceRows.Scan(&resourceID, &quantity, &unit); err != nil {

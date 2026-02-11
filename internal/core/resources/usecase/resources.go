@@ -4,6 +4,7 @@ import (
 	"tarmo/internal/core/resources/domain"
 	"tarmo/internal/core/resources/ports/inbound"
 	"tarmo/internal/core/resources/ports/outbound"
+	"tarmo/internal/core/shared"
 )
 
 type ResourceUseCase struct {
@@ -26,11 +27,19 @@ func (uc *ResourceUseCase) GetAll() ([]inbound.ResourceDTO, error) {
 			continue
 		}
 
+		qtyDTO := inbound.QuantityDTO{
+			Value: resource.QuantityValue(),
+			Unit: inbound.UnitDTO{
+				Name: resource.QuantityUnitName(),
+			},
+		}
+
 		dtos = append(dtos, inbound.ResourceDTO{
 			ID:          resource.ID(),
 			Name:        resource.Name(),
 			Description: resource.Description(),
 			Price:       resource.Price(),
+			Quantity:    qtyDTO,
 		})
 	}
 
@@ -43,16 +52,36 @@ func (uc *ResourceUseCase) GetByID(id int) (inbound.ResourceDTO, error) {
 		return inbound.ResourceDTO{}, err
 	}
 
+	qtyDTO := inbound.QuantityDTO{
+		Value: resource.QuantityValue(),
+		Unit: inbound.UnitDTO{
+			Name: resource.QuantityUnitName(),
+		},
+	}
+
 	return inbound.ResourceDTO{
 		ID:          resource.ID(),
 		Name:        resource.Name(),
 		Description: resource.Description(),
 		Price:       resource.Price(),
+		Quantity:    qtyDTO,
 	}, nil
 }
 
 func (uc *ResourceUseCase) Create(cmd inbound.CreateResourceCommand) (int, error) {
-	resource, err := domain.NewResource(cmd.Name, cmd.Description, cmd.Price)
+	unit, err := shared.NewUnit(cmd.Unit)
+	if err != nil {
+		return 0, err
+	}
+
+	qty, err := shared.NewQuantity(cmd.Quantity, unit)
+	if err != nil {
+		return 0, err
+	}
+
+	baseQty := qty.ToBase()
+
+	resource, err := domain.NewResource(cmd.Name, cmd.Description, cmd.Price, baseQty)
 	if err != nil {
 		return 0, err
 	}
@@ -67,7 +96,19 @@ func (uc *ResourceUseCase) Update(cmd inbound.UpdateResourceCommand) error {
 		return err
 	}
 
-	err = resource.Update(cmd.Name, cmd.Description, cmd.Price)
+	unit, err := shared.NewUnit(cmd.Unit)
+	if err != nil {
+		return err
+	}
+
+	qty, err := shared.NewQuantity(cmd.Quantity, unit)
+	if err != nil {
+		return err
+	}
+
+	baseQty := qty.ToBase()
+
+	err = resource.Update(cmd.Name, cmd.Description, cmd.Price, baseQty)
 	if err != nil {
 		return err
 	}

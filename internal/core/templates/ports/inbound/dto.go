@@ -5,7 +5,7 @@ import "tarmo/internal/core/shared"
 type CreateTemplateCommand struct {
 	Name        string
 	Description string
-	Quantity    int
+	Quantity    float64
 	Unit        string
 	Difficulty  int
 	Steps       []StepCommand
@@ -16,7 +16,7 @@ type UpdateTemplateCommand struct {
 	ID          int
 	Name        string
 	Description string
-	Quantity    int
+	Quantity    float64
 	Unit        string
 	Difficulty  int
 	Steps       []StepCommand
@@ -30,7 +30,7 @@ type StepCommand struct {
 
 type ResourceRefCommand struct {
 	ResourceID int
-	Quantity   int
+	Quantity   float64
 	Unit       string
 }
 
@@ -38,7 +38,7 @@ type TemplateDTO struct {
 	ID          int
 	Name        string
 	Description string
-	Quantity    int
+	Quantity    float64
 	Unit        shared.Unit
 	Difficulty  int
 	Steps       []StepDTO
@@ -53,6 +53,6 @@ type StepDTO struct {
 
 type ResourceRefDTO struct {
 	ResourceID int
-	Quantity   int
+	Quantity   float64
 	Unit       shared.Unit
 }
