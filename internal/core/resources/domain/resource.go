@@ -18,9 +18,9 @@ var (
 // ===========================MODELS============================
 
 type Resource struct {
-	id          int
-	name        string // [REQUIRED]
-	description string
+	id          int             // [REQUIRED] [AUTO GENERATED]
+	name        string          // [REQUIRED]
+	description string          // [OPTIONAL]
 	price       int             // [REQUIRED] In cents, or smallest currency unit
 	quantity    shared.Quantity // [REQUIRED] e.g. 100, 1
 }
@@ -37,12 +37,19 @@ func (r *Resource) QuantityUnitName() string  { return r.quantity.Unit().Name }
 
 // ===========================CONSTRUCTORS======================
 
-func NewResource(name string, description string, price int, quantity shared.Quantity) (*Resource, error) {
+func NewResource(name string, description string, price int, quantity float64, unitStr string) (*Resource, error) {
+	qty, err := shared.NewQuantity(quantity, unitStr)
+	if err != nil {
+		return nil, err
+	}
+
+	baseQty := qty.ToBase()
+
 	rsc := &Resource{
 		name:        name,
 		description: description,
 		price:       price,
-		quantity:    quantity,
+		quantity:    baseQty,
 	}
 	if err := rsc.Validate(); err != nil {
 		return nil, err
@@ -50,13 +57,20 @@ func NewResource(name string, description string, price int, quantity shared.Qua
 	return rsc, nil
 }
 
-func ReconstructResource(id int, name string, description string, price int, quantity shared.Quantity) (*Resource, error) {
+func ReconstructResource(id int, name string, description string, price int, quantity float64, unitStr string) (*Resource, error) {
+	qty, err := shared.NewQuantity(quantity, unitStr)
+	if err != nil {
+		return nil, err
+	}
+
+	baseQty := qty.ToBase()
+
 	rsc := &Resource{
 		id:          id,
 		name:        name,
 		description: description,
 		price:       price,
-		quantity:    quantity,
+		quantity:    baseQty,
 	}
 	if err := rsc.Validate(); err != nil {
 		return nil, err
@@ -66,8 +80,8 @@ func ReconstructResource(id int, name string, description string, price int, qua
 
 // ===========================METHODS===========================
 
-func (r *Resource) Update(name string, description string, price int, quantity shared.Quantity) error {
-	rsc, err := NewResource(name, description, price, quantity)
+func (r *Resource) Update(name string, description string, price int, quantity float64, unitStr string) error {
+	rsc, err := NewResource(name, description, price, quantity, unitStr)
 	if err != nil {
 		return err
 	}

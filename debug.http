@@ -28,7 +28,7 @@ Content-Type: application/json
   "name": "Pizza",
   "description": "Plantilla actualizada con recursos correctamente estructurados",
   "quantity": 1,
-  "unit": "pcs",
+  "unit": "kg",
   "difficulty": 5,
   "steps": [
     {

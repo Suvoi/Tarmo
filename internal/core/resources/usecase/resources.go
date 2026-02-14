@@ -27,9 +27,9 @@ func (uc *ResourceUseCase) GetAll() ([]inbound.ResourceDTO, error) {
 			continue
 		}
 
-		qtyDTO := inbound.QuantityDTO{
+		qtyDTO := shared.QuantityDTO{
 			Value: resource.QuantityValue(),
-			Unit: inbound.UnitDTO{
+			Unit: shared.UnitDTO{
 				Name: resource.QuantityUnitName(),
 			},
 		}
@@ -52,9 +52,9 @@ func (uc *ResourceUseCase) GetByID(id int) (inbound.ResourceDTO, error) {
 		return inbound.ResourceDTO{}, err
 	}
 
-	qtyDTO := inbound.QuantityDTO{
+	qtyDTO := shared.QuantityDTO{
 		Value: resource.QuantityValue(),
-		Unit: inbound.UnitDTO{
+		Unit: shared.UnitDTO{
 			Name: resource.QuantityUnitName(),
 		},
 	}
@@ -69,19 +69,7 @@ func (uc *ResourceUseCase) GetByID(id int) (inbound.ResourceDTO, error) {
 }
 
 func (uc *ResourceUseCase) Create(cmd inbound.CreateResourceCommand) (int, error) {
-	unit, err := shared.NewUnit(cmd.Unit)
-	if err != nil {
-		return 0, err
-	}
-
-	qty, err := shared.NewQuantity(cmd.Quantity, unit)
-	if err != nil {
-		return 0, err
-	}
-
-	baseQty := qty.ToBase()
-
-	resource, err := domain.NewResource(cmd.Name, cmd.Description, cmd.Price, baseQty)
+	resource, err := domain.NewResource(cmd.Name, cmd.Description, cmd.Price, cmd.Quantity, cmd.Unit)
 	if err != nil {
 		return 0, err
 	}
@@ -96,19 +84,7 @@ func (uc *ResourceUseCase) Update(cmd inbound.UpdateResourceCommand) error {
 		return err
 	}
 
-	unit, err := shared.NewUnit(cmd.Unit)
-	if err != nil {
-		return err
-	}
-
-	qty, err := shared.NewQuantity(cmd.Quantity, unit)
-	if err != nil {
-		return err
-	}
-
-	baseQty := qty.ToBase()
-
-	err = resource.Update(cmd.Name, cmd.Description, cmd.Price, baseQty)
+	err = resource.Update(cmd.Name, cmd.Description, cmd.Price, cmd.Quantity, cmd.Unit)
 	if err != nil {
 		return err
 	}

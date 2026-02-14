@@ -1,5 +1,7 @@
 package inbound
 
+import "tarmo/internal/core/shared"
+
 type CreateResourceCommand struct {
 	Name        string
 	Description string
@@ -22,14 +24,5 @@ type ResourceDTO struct {
 	Name        string
 	Description string
 	Price       int
-	Quantity    QuantityDTO
-}
-
-type QuantityDTO struct {
-	Value float64
-	Unit  UnitDTO
-}
-
-type UnitDTO struct {
-	Name string
+	Quantity    shared.QuantityDTO
 }

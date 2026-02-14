@@ -15,6 +15,11 @@ type Quantity struct {
 	unit  Unit
 }
 
+type QuantityDTO struct {
+	Value float64
+	Unit  UnitDTO
+}
+
 // ===========================GETTERS===========================
 
 func (q *Quantity) Value() float64 { return q.value }
@@ -22,7 +27,11 @@ func (q *Quantity) Unit() Unit     { return q.unit }
 
 // ===========================CONSTRUCTORS======================
 
-func NewQuantity(value float64, unit Unit) (Quantity, error) {
+func NewQuantity(value float64, unitStr string) (Quantity, error) {
+	unit, err := NewUnit(unitStr)
+	if err != nil {
+		return Quantity{}, err
+	}
 	if value <= 0 {
 		return Quantity{}, ErrQuantityInvalid
 	}

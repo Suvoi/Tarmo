@@ -5,7 +5,6 @@ import (
 	"errors"
 	"tarmo/internal/core/resources"
 	"tarmo/internal/core/resources/domain"
-	"tarmo/internal/core/shared"
 )
 
 type resourceRepository struct {
@@ -40,12 +39,7 @@ func (r *resourceRepository) FindAll() ([]*domain.Resource, error) {
 			return nil, err
 		}
 
-		quantity, err := shared.ReconstructQuantity(baseQuantity, baseUnit)
-		if err != nil {
-			return nil, err
-		}
-
-		rsc, err := domain.ReconstructResource(id, name, description, price, quantity)
+		rsc, err := domain.ReconstructResource(id, name, description, price, baseQuantity, baseUnit)
 		if err != nil {
 			return nil, err
 		}
@@ -77,12 +71,7 @@ func (r *resourceRepository) FindByID(id int) (*domain.Resource, error) {
 		return nil, err
 	}
 
-	quantity, err := shared.ReconstructQuantity(baseQuantity, baseUnit)
-	if err != nil {
-		return nil, err
-	}
-
-	return domain.ReconstructResource(id, name, description, price, quantity)
+	return domain.ReconstructResource(id, name, description, price, baseQuantity, baseUnit)
 }
 
 func (r *resourceRepository) Save(resource *domain.Resource) (int, error) {

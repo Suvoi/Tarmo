@@ -73,8 +73,8 @@ func ToResponse(dto *inbound.TemplateDTO) TemplateJSONResponseDTO {
 	for i, r := range dto.Resources {
 		resources[i] = ResourceRefResponseDTO{
 			ResourceID: r.ResourceID,
-			Quantity:   r.Quantity,
-			Unit:       string(r.Unit),
+			Quantity:   r.Quantity.Value,
+			Unit:       r.Quantity.Unit.Name,
 		}
 	}
 
@@ -82,8 +82,8 @@ func ToResponse(dto *inbound.TemplateDTO) TemplateJSONResponseDTO {
 		ID:          dto.ID,
 		Name:        dto.Name,
 		Description: dto.Description,
-		Quantity:    dto.Quantity,
-		Unit:        string(dto.Unit),
+		Quantity:    dto.Quantity.Value,
+		Unit:        dto.Quantity.Unit.Name,
 		Difficulty:  dto.Difficulty,
 		Steps:       steps,
 		Resources:   resources,

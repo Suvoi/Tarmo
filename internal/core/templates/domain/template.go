@@ -25,10 +25,9 @@ type Template struct {
 	id          int
 	name        string // [REQUIRED]
 	description string
-	quantity    float64     // [REQUIRED]
-	unit        shared.Unit // [REQUIRED]
-	difficulty  int         // [REQUIRED]
-	steps       []Step      // [REQUIRED] MIN 1
+	quantity    shared.Quantity // [REQUIRED]
+	difficulty  int             // [REQUIRED]
+	steps       []Step          // [REQUIRED] MIN 1
 	resources   []ResourceRef
 }
 
@@ -39,37 +38,41 @@ type Step struct {
 }
 
 type ResourceRef struct {
-	resourceID int         // [REQUIRED]
-	quantity   float64     // [REQUIRED]
-	unit       shared.Unit // [REQUIRED]
+	resourceID int             // [REQUIRED]
+	quantity   shared.Quantity // [REQUIRED]
 }
 
 // ===========================GETTERS===========================
 
-func (t *Template) ID() int                  { return t.id }
-func (t *Template) Name() string             { return t.name }
-func (t *Template) Description() string      { return t.description }
-func (t *Template) Quantity() float64        { return t.quantity }
-func (t *Template) Unit() shared.Unit        { return t.unit }
-func (t *Template) Difficulty() int          { return t.difficulty }
-func (t *Template) Steps() []Step            { return append([]Step(nil), t.steps...) }
-func (t *Template) Resources() []ResourceRef { return append([]ResourceRef(nil), t.resources...) }
+func (t *Template) ID() int                   { return t.id }
+func (t *Template) Name() string              { return t.name }
+func (t *Template) Description() string       { return t.description }
+func (t *Template) Quantity() shared.Quantity { return t.quantity }
+func (t *Template) QuantityValue() float64    { return t.quantity.Value() }
+func (t *Template) QuantityUnitName() string  { return t.quantity.Unit().Name }
+func (t *Template) Difficulty() int           { return t.difficulty }
+func (t *Template) Steps() []Step             { return append([]Step(nil), t.steps...) }
+func (t *Template) Resources() []ResourceRef  { return append([]ResourceRef(nil), t.resources...) }
 
 func (s *Step) Order() int           { return s.order }
 func (s *Step) Name() string         { return s.name }
 func (s *Step) Instructions() string { return s.instructions }
 
-func (rr *ResourceRef) ResourceID() int   { return rr.resourceID }
-func (rr *ResourceRef) Quantity() float64 { return rr.quantity }
-func (rr *ResourceRef) Unit() shared.Unit { return rr.unit }
+func (rr *ResourceRef) ResourceID() int          { return rr.resourceID }
+func (rr *ResourceRef) QuantityValue() float64   { return rr.quantity.Value() }
+func (rr *ResourceRef) QuantityUnitName() string { return rr.quantity.Unit().Name }
 
 // ===========================CONSTRUCTORS======================
 
-func NewResourceRef(resourceID int, quantity float64, unit shared.Unit) (ResourceRef, error) {
+func NewResourceRef(resourceID int, quantity float64, unitStr string) (ResourceRef, error) {
+	qty, err := shared.NewQuantity(quantity, unitStr)
+	if err != nil {
+		return ResourceRef{}, err
+	}
+	qty = qty.ToBase()
 	rr := ResourceRef{
 		resourceID: resourceID,
-		quantity:   quantity,
-		unit:       unit,
+		quantity:   qty,
 	}
 	if err := rr.Validate(); err != nil {
 		return ResourceRef{}, err
@@ -92,17 +95,22 @@ func NewStep(name, instructions string, order int) (Step, error) {
 func NewTemplate(
 	name string,
 	quantity float64,
-	unit shared.Unit,
+	unitStr string,
 	difficulty int,
 	steps []Step,
 	description string,
 	resources []ResourceRef,
 ) (*Template, error) {
+
+	qty, err := shared.NewQuantity(quantity, unitStr)
+	if err != nil {
+		return nil, err
+	}
+	qty = qty.ToBase()
 	r := &Template{
 		id:          0,
 		name:        name,
-		quantity:    quantity,
-		unit:        unit,
+		quantity:    qty,
 		difficulty:  difficulty,
 		steps:       steps,
 		description: description,
@@ -120,17 +128,22 @@ func ReconstructTemplate(
 	id int,
 	name string,
 	quantity float64,
-	unit shared.Unit,
+	unitStr string,
 	difficulty int,
 	steps []Step,
 	description string,
 	resources []ResourceRef,
 ) (*Template, error) {
+
+	qty, err := shared.NewQuantity(quantity, unitStr)
+	if err != nil {
+		return nil, err
+	}
+	qty = qty.ToBase()
 	t := &Template{
 		id:          id,
 		name:        name,
-		quantity:    quantity,
-		unit:        unit,
+		quantity:    qty,
 		difficulty:  difficulty,
 		steps:       steps,
 		description: description,
@@ -145,15 +158,14 @@ func ReconstructTemplate(
 }
 
 // ===========================METHODS===========================
-func (t *Template) Update(name string, quantity float64, unit shared.Unit, difficulty int, steps []Step, description string, resources []ResourceRef) error {
-	temp, err := NewTemplate(name, quantity, unit, difficulty, steps, description, resources)
+func (t *Template) Update(name string, quantity float64, unitStr string, difficulty int, steps []Step, description string, resources []ResourceRef) error {
+	temp, err := NewTemplate(name, quantity, unitStr, difficulty, steps, description, resources)
 	if err != nil {
 		return err
 	}
 
 	t.name = temp.name
 	t.quantity = temp.quantity
-	t.unit = temp.unit
 	t.difficulty = temp.difficulty
 	t.steps = temp.steps
 	t.description = temp.description
@@ -177,12 +189,6 @@ func (t *Template) UpdateResources(resources []ResourceRef) error {
 func (t *Template) Validate() error {
 	if t.name == "" {
 		return ErrNameRequired
-	}
-	if t.quantity <= 0 {
-		return ErrQuantityInvalid
-	}
-	if t.unit.Name == "" {
-		return ErrUnitRequired
 	}
 	if t.difficulty < 0 || t.difficulty > 5 {
 		return ErrDifficultyInvalid
@@ -221,12 +227,5 @@ func (rr *ResourceRef) Validate() error {
 	if rr.resourceID <= 0 {
 		return ErrResourceIDInvalid
 	}
-	if rr.quantity <= 0 {
-		return ErrQuantityInvalid
-	}
-	if rr.unit.Name == "" {
-		return ErrUnitRequired
-	}
-
 	return nil
 }

@@ -8,9 +8,11 @@ import (
 
 	"tarmo/internal/adapters/inbound/rest/middleware"
 	"tarmo/internal/adapters/inbound/rest/resources"
+	"tarmo/internal/adapters/inbound/rest/templates"
 	"tarmo/internal/adapters/outbound/persistence/sqlite"
 	"tarmo/internal/config"
 	resourceUseCase "tarmo/internal/core/resources/usecase"
+	templateUseCase "tarmo/internal/core/templates/usecase"
 	"tarmo/internal/lib/logger"
 )
 
@@ -32,15 +34,15 @@ func main() {
 	}
 
 	// Repositories
-	// templateRepo := sqlite.NewTemplateRepository(db)
+	templateRepo := sqlite.NewTemplateRepository(db)
 	resourceRepo := sqlite.NewResourceRepository(db)
 
 	// Use cases
-	// templateUC := templateUseCase.NewTemplateUseCase(templateRepo)
+	templateUC := templateUseCase.NewTemplateUseCase(templateRepo)
 	resUC := resourceUseCase.NewResourceUseCase(resourceRepo)
 
 	// Handlers
-	// templateHandler := templates.NewHandler(templateUC)
+	templateHandler := templates.NewHandler(templateUC)
 	resourceHandler := resources.NewHandler(resUC)
 
 	// Router
@@ -56,7 +58,7 @@ func main() {
 	}))
 
 	r.Route("/", func(r chi.Router) {
-		// templates.RegisterRoutes(r, templateHandler)
+		templates.RegisterRoutes(r, templateHandler)
 		resources.RegisterRoutes(r, resourceHandler)
 	})
 

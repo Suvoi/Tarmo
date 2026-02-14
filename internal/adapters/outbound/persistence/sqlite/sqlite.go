@@ -16,6 +16,17 @@ func NewSQLiteDB(dbPath string) (*SQLiteDB, error) {
 		return nil, err
 	}
 
+	// Enable WAL mode for better concurrency (allows concurrent reads and writes)
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		return nil, err
+	}
+
+	// Set busy timeout to 5 seconds to handle lock contention
+	if _, err := db.Exec("PRAGMA busy_timeout = 5000"); err != nil {
+		return nil, err
+	}
+
+	// Enable foreign keys
 	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, err
 	}

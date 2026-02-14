@@ -27,12 +27,18 @@ func (uc *TemplateUseCase) GetAll() ([]inbound.TemplateDTO, error) {
 			continue
 		}
 
+		qtyDTO := shared.QuantityDTO{
+			Value: template.QuantityValue(),
+			Unit: shared.UnitDTO{
+				Name: template.QuantityUnitName(),
+			},
+		}
+
 		dtos = append(dtos, inbound.TemplateDTO{
 			ID:          template.ID(),
 			Name:        template.Name(),
 			Description: template.Description(),
-			Quantity:    template.Quantity(),
-			Unit:        template.Unit(),
+			Quantity:    qtyDTO,
 			Difficulty:  template.Difficulty(),
 			Resources:   mapResourcesToDTO(template.Resources()),
 		})
@@ -56,12 +62,18 @@ func (uc *TemplateUseCase) GetByID(id int) (inbound.TemplateDTO, error) {
 		})
 	}
 
+	qtyDTO := shared.QuantityDTO{
+		Value: template.QuantityValue(),
+		Unit: shared.UnitDTO{
+			Name: template.QuantityUnitName(),
+		},
+	}
+
 	return inbound.TemplateDTO{
 		ID:          template.ID(),
 		Name:        template.Name(),
 		Description: template.Description(),
-		Quantity:    template.Quantity(),
-		Unit:        template.Unit(),
+		Quantity:    qtyDTO,
 		Difficulty:  template.Difficulty(),
 		Steps:       steps,
 		Resources:   mapResourcesToDTO(template.Resources()),
@@ -79,7 +91,7 @@ func (uc *TemplateUseCase) Create(cmd inbound.CreateTemplateCommand) (int, error
 		return 0, err
 	}
 
-	template, err := domain.NewTemplate(cmd.Name, cmd.Quantity, shared.Unit(cmd.Unit), cmd.Difficulty, steps, cmd.Description, resources)
+	template, err := domain.NewTemplate(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description, resources)
 	if err != nil {
 		return 0, err
 	}
@@ -104,7 +116,7 @@ func (uc *TemplateUseCase) Update(cmd inbound.UpdateTemplateCommand) error {
 		return err
 	}
 
-	err = template.Update(cmd.Name, cmd.Quantity, shared.Unit(cmd.Unit), cmd.Difficulty, steps, cmd.Description, resources)
+	err = template.Update(cmd.Name, cmd.Quantity, cmd.Unit, cmd.Difficulty, steps, cmd.Description, resources)
 	if err != nil {
 		return err
 	}
@@ -131,7 +143,7 @@ func mapStepsToDomain(dtos []inbound.StepCommand) ([]domain.Step, error) {
 func mapResourcesToDomain(dtos []inbound.ResourceRefCommand) ([]domain.ResourceRef, error) {
 	resources := make([]domain.ResourceRef, 0, len(dtos))
 	for _, r := range dtos {
-		ref, err := domain.NewResourceRef(r.ResourceID, r.Quantity, shared.Unit(r.Unit))
+		ref, err := domain.NewResourceRef(r.ResourceID, r.Quantity, r.Unit)
 		if err != nil {
 			return nil, err
 		}
@@ -143,10 +155,17 @@ func mapResourcesToDomain(dtos []inbound.ResourceRefCommand) ([]domain.ResourceR
 func mapResourcesToDTO(resources []domain.ResourceRef) []inbound.ResourceRefDTO {
 	dtos := make([]inbound.ResourceRefDTO, 0, len(resources))
 	for _, r := range resources {
+
+		qtyDTO := shared.QuantityDTO{
+			Value: r.QuantityValue(),
+			Unit: shared.UnitDTO{
+				Name: r.QuantityUnitName(),
+			},
+		}
+
 		dtos = append(dtos, inbound.ResourceRefDTO{
 			ResourceID: r.ResourceID(),
-			Quantity:   r.Quantity(),
-			Unit:       r.Unit(),
+			Quantity:   qtyDTO,
 		})
 	}
 	return dtos

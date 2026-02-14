@@ -38,8 +38,7 @@ type TemplateDTO struct {
 	ID          int
 	Name        string
 	Description string
-	Quantity    float64
-	Unit        shared.Unit
+	Quantity    shared.QuantityDTO
 	Difficulty  int
 	Steps       []StepDTO
 	Resources   []ResourceRefDTO
@@ -53,6 +52,5 @@ type StepDTO struct {
 
 type ResourceRefDTO struct {
 	ResourceID int
-	Quantity   float64
-	Unit       shared.Unit
+	Quantity   shared.QuantityDTO
 }

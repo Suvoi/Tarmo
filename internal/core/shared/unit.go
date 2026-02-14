@@ -36,6 +36,10 @@ var Units = map[string]Unit{
 	"pcs": {"pcs", Count, 1},
 }
 
+type UnitDTO struct {
+	Name string
+}
+
 // ===========================METHODS===========================
 
 func NewUnit(name string) (Unit, error) {

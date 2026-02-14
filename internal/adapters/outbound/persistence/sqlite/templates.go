@@ -3,7 +3,6 @@ package sqlite
 import (
 	"database/sql"
 	"errors"
-	"tarmo/internal/core/shared"
 	"tarmo/internal/core/templates"
 	"tarmo/internal/core/templates/domain"
 )
@@ -27,28 +26,38 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 	}
 	defer rows.Close()
 
-	var templates []*domain.Template
+	// Collect template data first, then close rows immediately
+	type templateData struct {
+		id          int
+		name        string
+		description string
+		quantity    float64
+		unit        string
+		difficulty  int
+	}
 
+	var templatesData []templateData
 	for rows.Next() {
-		var (
-			templateID  int
-			name        string
-			description string
-			quantity    float64
-			unit        shared.Unit
-			difficulty  int
-		)
-
-		if err := rows.Scan(&templateID, &name, &description, &quantity, &unit, &difficulty); err != nil {
+		var td templateData
+		if err := rows.Scan(&td.id, &td.name, &td.description, &td.quantity, &td.unit, &td.difficulty); err != nil {
 			return nil, err
 		}
+		templatesData = append(templatesData, td)
+	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Now build full templates by loading steps and resources for each
+	var templates []*domain.Template
+	for _, td := range templatesData {
 		// Get steps for this template
 		stepRows, err := r.db.Query(`
 			SELECT step_order, name, instructions
 			FROM steps WHERE template_id = ?
 			ORDER BY step_order
-		`, templateID)
+		`, td.id)
 		if err != nil {
 			return nil, err
 		}
@@ -78,42 +87,49 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 			return nil, err
 		}
 
+		// Get resources for this template
 		resourceRefs := []domain.ResourceRef{}
 		resourceRows, err := r.db.Query(`
-		SELECT resource_id, quantity, unit
-		FROM template_resources WHERE template_id = ?
-	`, templateID)
+			SELECT resource_id, quantity, unit
+			FROM template_resources WHERE template_id = ?
+		`, td.id)
 		if err != nil {
 			return nil, err
 		}
-		defer resourceRows.Close()
 
 		for resourceRows.Next() {
 			var (
 				resourceID int
 				quantity   float64
-				unit       shared.Unit
+				unit       string
 			)
 			if err := resourceRows.Scan(&resourceID, &quantity, &unit); err != nil {
+				resourceRows.Close()
 				return nil, err
 			}
 
 			resourceRef, err := domain.NewResourceRef(resourceID, quantity, unit)
 			if err != nil {
-				return nil, err // Invalid resource ref
+				resourceRows.Close()
+				return nil, err
 			}
 			resourceRefs = append(resourceRefs, resourceRef)
+		}
+		resourceRows.Close()
+
+		if err := resourceRows.Err(); err != nil {
+			return nil, err
 		}
 
 		// Reconstruct template with steps
 		template, err := domain.ReconstructTemplate(
-			templateID,
-			name,
-			quantity,
-			unit,
-			difficulty,
+			td.id,
+			td.name,
+			td.quantity,
+			td.unit,
+			td.difficulty,
 			steps,
-			description,
+			td.description,
 			resourceRefs,
 		)
 		if err != nil {
@@ -123,7 +139,7 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 		templates = append(templates, template)
 	}
 
-	return templates, rows.Err()
+	return templates, nil
 }
 
 func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
@@ -139,7 +155,7 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 		name        string
 		description string
 		quantity    float64
-		unit        shared.Unit
+		unit        string
 		difficulty  int
 	)
 
@@ -193,7 +209,7 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 		var (
 			resourceID int
 			quantity   float64
-			unit       shared.Unit
+			unit       string
 		)
 		if err := resourceRows.Scan(&resourceID, &quantity, &unit); err != nil {
 			return nil, err
@@ -219,61 +235,60 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 	)
 }
 
-func (r *templateRepository) Save(tmpl *domain.Template) (int, error) {
-	// Begin transaction
+func (r *templateRepository) Save(tmpl *domain.Template) (id int, err error) {
+
 	tx, err := r.db.Begin()
 	if err != nil {
-		return 0, err
+		return
 	}
 
 	defer func() {
 		if err != nil {
 			tx.Rollback()
+		} else {
+			err = tx.Commit()
 		}
 	}()
 
 	query := `
-	        INSERT INTO templates (name, description, quantity, unit, difficulty)
-	        VALUES (?, ?, ?, ?, ?)
+		INSERT INTO templates (name, description, quantity, unit, difficulty)
+		VALUES (?, ?, ?, ?, ?)
 	`
+
 	result, err := tx.Exec(query,
 		tmpl.Name(),
 		tmpl.Description(),
-		tmpl.Quantity(),
-		tmpl.Unit(),
+		tmpl.QuantityValue(),
+		tmpl.QuantityUnitName(),
 		tmpl.Difficulty(),
 	)
 	if err != nil {
-		return 0, err
+		return
 	}
 
 	templateID, err := result.LastInsertId()
 	if err != nil {
-		return 0, err
+		return
 	}
 
 	stepQuery := `INSERT INTO steps (template_id, step_order, name, instructions) VALUES (?, ?, ?, ?)`
 	for _, step := range tmpl.Steps() {
-		_, err := tx.Exec(stepQuery, templateID, step.Order(), step.Name(), step.Instructions())
+		_, err = tx.Exec(stepQuery, templateID, step.Order(), step.Name(), step.Instructions())
 		if err != nil {
-			return 0, err
+			return
 		}
 	}
 
 	resourceQuery := `INSERT INTO template_resources (template_id, resource_id, quantity, unit) VALUES (?, ?, ?, ?)`
 	for _, resource := range tmpl.Resources() {
-		_, err := tx.Exec(resourceQuery, templateID, resource.ResourceID(), resource.Quantity(), resource.Unit())
+		_, err = tx.Exec(resourceQuery, templateID, resource.ResourceID(), resource.QuantityValue(), resource.QuantityUnitName())
 		if err != nil {
-			return 0, err
+			return
 		}
 	}
 
-	// No errors, commit
-	if err = tx.Commit(); err != nil {
-		return 0, err
-	}
-
-	return int(templateID), nil
+	id = int(templateID)
+	return
 }
 
 func (r *templateRepository) Update(tmpl *domain.Template) error {
@@ -297,8 +312,8 @@ func (r *templateRepository) Update(tmpl *domain.Template) error {
 	_, err = tx.Exec(query,
 		tmpl.Name(),
 		tmpl.Description(),
-		tmpl.Quantity(),
-		tmpl.Unit(),
+		tmpl.QuantityValue(),
+		tmpl.QuantityUnitName(),
 		tmpl.Difficulty(),
 		tmpl.ID(),
 	)
@@ -326,7 +341,7 @@ func (r *templateRepository) Update(tmpl *domain.Template) error {
 
 	resourceQuery := `INSERT INTO template_resources (template_id, resource_id, quantity, unit) VALUES (?, ?, ?, ?)`
 	for _, resource := range tmpl.Resources() {
-		_, err := tx.Exec(resourceQuery, tmpl.ID(), resource.ResourceID(), resource.Quantity(), resource.Unit())
+		_, err := tx.Exec(resourceQuery, tmpl.ID(), resource.ResourceID(), resource.QuantityValue(), resource.QuantityUnitName())
 		if err != nil {
 			return err
 		}
