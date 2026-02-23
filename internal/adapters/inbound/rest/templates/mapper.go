@@ -12,9 +12,9 @@ func ToCreateCommand(req CreateTemplateRequestDTO) inbound.CreateTemplateCommand
 			Instructions: s.Instructions,
 		})
 	}
-	resources := make([]inbound.ResourceRefCommand, 0, len(req.Resources))
+	resources := make([]inbound.InputRequirementCommand, 0, len(req.Resources))
 	for _, r := range req.Resources {
-		resources = append(resources, inbound.ResourceRefCommand{
+		resources = append(resources, inbound.InputRequirementCommand{
 			ResourceID: r.ResourceID,
 			Quantity:   r.Quantity,
 			Unit:       r.Unit,
@@ -39,9 +39,9 @@ func ToUpdateCommand(req UpdateTemplateRequestDTO) inbound.UpdateTemplateCommand
 			Instructions: s.Instructions,
 		})
 	}
-	resources := make([]inbound.ResourceRefCommand, 0, len(req.Resources))
+	resources := make([]inbound.InputRequirementCommand, 0, len(req.Resources))
 	for _, r := range req.Resources {
-		resources = append(resources, inbound.ResourceRefCommand{
+		resources = append(resources, inbound.InputRequirementCommand{
 			ResourceID: r.ResourceID,
 			Quantity:   r.Quantity,
 			Unit:       r.Unit,
@@ -69,9 +69,9 @@ func ToResponse(dto *inbound.TemplateDTO) TemplateJSONResponseDTO {
 		}
 	}
 
-	resources := make([]ResourceRefResponseDTO, len(dto.Resources))
+	resources := make([]InputRequirementResponseDTO, len(dto.Resources))
 	for i, r := range dto.Resources {
-		resources[i] = ResourceRefResponseDTO{
+		resources[i] = InputRequirementResponseDTO{
 			ResourceID: r.ResourceID,
 			Quantity:   r.Quantity.Value,
 			Unit:       r.Quantity.Unit.Name,

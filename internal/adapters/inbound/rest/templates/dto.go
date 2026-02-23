@@ -6,21 +6,21 @@ type StepJSONResponseDTO struct {
 	Instructions string `json:"instructions"`
 }
 
-type ResourceRefResponseDTO struct {
+type InputRequirementResponseDTO struct {
 	ResourceID int     `json:"resource_id"`
 	Quantity   float64 `json:"quantity"`
 	Unit       string  `json:"unit"`
 }
 
 type TemplateJSONResponseDTO struct {
-	ID          int                      `json:"id"`
-	Name        string                   `json:"name"`
-	Description string                   `json:"description"`
-	Quantity    float64                  `json:"quantity"`
-	Unit        string                   `json:"unit"`
-	Difficulty  int                      `json:"difficulty"`
-	Steps       []StepJSONResponseDTO    `json:"steps"`
-	Resources   []ResourceRefResponseDTO `json:"resources"`
+	ID          int                           `json:"id"`
+	Name        string                        `json:"name"`
+	Description string                        `json:"description"`
+	Quantity    float64                       `json:"quantity"`
+	Unit        string                        `json:"unit"`
+	Difficulty  int                           `json:"difficulty"`
+	Steps       []StepJSONResponseDTO         `json:"steps"`
+	Resources   []InputRequirementResponseDTO `json:"resources"`
 }
 
 type TemplateListJSONResponseDTO struct {
@@ -30,27 +30,27 @@ type TemplateListJSONResponseDTO struct {
 }
 
 type CreateTemplateRequestDTO struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Quantity    float64          `json:"quantity"`
-	Unit        string           `json:"unit"`
-	Difficulty  int              `json:"difficulty"`
-	Steps       []StepDTO        `json:"steps"`
-	Resources   []ResourceRefDTO `json:"resources"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Quantity    float64               `json:"quantity"`
+	Unit        string                `json:"unit"`
+	Difficulty  int                   `json:"difficulty"`
+	Steps       []StepDTO             `json:"steps"`
+	Resources   []InputRequirementDTO `json:"resources"`
 }
 
 type UpdateTemplateRequestDTO struct {
-	ID          int              `json:"id"`
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Quantity    float64          `json:"quantity"`
-	Unit        string           `json:"unit"`
-	Difficulty  int              `json:"difficulty"`
-	Steps       []StepDTO        `json:"steps"`
-	Resources   []ResourceRefDTO `json:"resources"`
+	ID          int                   `json:"id"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Quantity    float64               `json:"quantity"`
+	Unit        string                `json:"unit"`
+	Difficulty  int                   `json:"difficulty"`
+	Steps       []StepDTO             `json:"steps"`
+	Resources   []InputRequirementDTO `json:"resources"`
 }
 
-type ResourceRefDTO struct {
+type InputRequirementDTO struct {
 	ResourceID int     `json:"resource_id"`
 	Quantity   float64 `json:"quantity"`
 	Unit       string  `json:"unit"`

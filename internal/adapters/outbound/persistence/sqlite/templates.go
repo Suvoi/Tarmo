@@ -88,7 +88,7 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 		}
 
 		// Get resources for this template
-		resourceRefs := []domain.ResourceRef{}
+		InputRequirements := []domain.InputRequirement{}
 		resourceRows, err := r.db.Query(`
 			SELECT resource_id, quantity, unit
 			FROM template_resources WHERE template_id = ?
@@ -108,12 +108,12 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 				return nil, err
 			}
 
-			resourceRef, err := domain.NewResourceRef(resourceID, quantity, unit)
+			InputRequirement, err := domain.NewInputRequirement(resourceID, quantity, unit)
 			if err != nil {
 				resourceRows.Close()
 				return nil, err
 			}
-			resourceRefs = append(resourceRefs, resourceRef)
+			InputRequirements = append(InputRequirements, InputRequirement)
 		}
 		resourceRows.Close()
 
@@ -130,7 +130,7 @@ func (r *templateRepository) FindAll() ([]*domain.Template, error) {
 			td.difficulty,
 			steps,
 			td.description,
-			resourceRefs,
+			InputRequirements,
 		)
 		if err != nil {
 			return nil, err
@@ -195,7 +195,7 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 		steps = append(steps, step)
 	}
 
-	resourceRefs := []domain.ResourceRef{}
+	InputRequirements := []domain.InputRequirement{}
 	resourceRows, err := r.db.Query(`
 		SELECT resource_id, quantity, unit
 		FROM template_resources WHERE template_id = ?
@@ -215,11 +215,11 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 			return nil, err
 		}
 
-		resourceRef, err := domain.NewResourceRef(resourceID, quantity, unit)
+		InputRequirement, err := domain.NewInputRequirement(resourceID, quantity, unit)
 		if err != nil {
 			return nil, err // Invalid resource ref
 		}
-		resourceRefs = append(resourceRefs, resourceRef)
+		InputRequirements = append(InputRequirements, InputRequirement)
 	}
 
 	// Reconstruct
@@ -231,7 +231,7 @@ func (r *templateRepository) FindByID(id int) (*domain.Template, error) {
 		difficulty,
 		steps,
 		description,
-		resourceRefs,
+		InputRequirements,
 	)
 }
 

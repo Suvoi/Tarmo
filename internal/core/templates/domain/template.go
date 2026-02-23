@@ -17,29 +17,40 @@ var (
 	ErrStepName          = errors.New("step must have a name")
 	ErrStepOrder         = errors.New("step order must be greater than 0")
 	ErrResourceIDInvalid = errors.New("resource ID must be greater than 0")
+	ErrProductIDInvalid  = errors.New("product ID must be greater than 0")
+	ErrItemTypeInvalid   = errors.New("item type must be RESOURCE or PRODUCT")
 )
 
 // ===========================MODELS============================
 
 type Template struct {
-	id          int
-	name        string // [REQUIRED]
-	description string
+	id          int             // [REQUIRED] [AUTO GENERATED]
+	name        string          // [REQUIRED]
+	description string          // [OPTIONAL]
 	quantity    shared.Quantity // [REQUIRED]
 	difficulty  int             // [REQUIRED]
-	steps       []Step          // [REQUIRED] MIN 1
-	resources   []ResourceRef
+
+	steps []Step // [REQUIRED] MIN 1
+
+	inputs  []InputRequirement // [REQUIRED] MIN 1
+	outputs []ProductReference // [REQUIRED] MIN 1
 }
 
 type Step struct {
 	order        int    // [REQUIRED]
 	name         string // [REQUIRED]
-	instructions string
+	instructions string // [OPTIONAL]
 }
 
-type ResourceRef struct {
+type InputRequirement struct {
+	itemType   string          // [REQUIRED] [RESOURCE, PRODUCT]
 	resourceID int             // [REQUIRED]
 	quantity   shared.Quantity // [REQUIRED]
+}
+
+type ProductReference struct {
+	productID int             // [REQUIRED]
+	quantity  shared.Quantity // [REQUIRED]
 }
 
 // ===========================GETTERS===========================
@@ -51,33 +62,61 @@ func (t *Template) Quantity() shared.Quantity { return t.quantity }
 func (t *Template) QuantityValue() float64    { return t.quantity.Value() }
 func (t *Template) QuantityUnitName() string  { return t.quantity.Unit().Name }
 func (t *Template) Difficulty() int           { return t.difficulty }
-func (t *Template) Steps() []Step             { return append([]Step(nil), t.steps...) }
-func (t *Template) Resources() []ResourceRef  { return append([]ResourceRef(nil), t.resources...) }
+
+func (t *Template) Steps() []Step { return append([]Step(nil), t.steps...) }
+
+func (t *Template) Inputs() []InputRequirement {
+	return append([]InputRequirement(nil), t.inputs...)
+}
+func (t *Template) Outputs() []ProductReference {
+	return append([]ProductReference(nil), t.outputs...)
+}
 
 func (s *Step) Order() int           { return s.order }
 func (s *Step) Name() string         { return s.name }
 func (s *Step) Instructions() string { return s.instructions }
 
-func (rr *ResourceRef) ResourceID() int          { return rr.resourceID }
-func (rr *ResourceRef) QuantityValue() float64   { return rr.quantity.Value() }
-func (rr *ResourceRef) QuantityUnitName() string { return rr.quantity.Unit().Name }
+func (ir *InputRequirement) ItemType() string         { return ir.itemType }
+func (ir *InputRequirement) ResourceID() int          { return ir.resourceID }
+func (ir *InputRequirement) QuantityValue() float64   { return ir.quantity.Value() }
+func (ir *InputRequirement) QuantityUnitName() string { return ir.quantity.Unit().Name }
+
+func (pr *ProductReference) ProductID() int           { return pr.productID }
+func (pr *ProductReference) QuantityValue() float64   { return pr.quantity.Value() }
+func (pr *ProductReference) QuantityUnitName() string { return pr.quantity.Unit().Name }
 
 // ===========================CONSTRUCTORS======================
 
-func NewResourceRef(resourceID int, quantity float64, unitStr string) (ResourceRef, error) {
+func NewInputRequirement(resourceID int, quantity float64, unitStr string) (InputRequirement, error) {
 	qty, err := shared.NewQuantity(quantity, unitStr)
 	if err != nil {
-		return ResourceRef{}, err
+		return InputRequirement{}, err
 	}
 	qty = qty.ToBase()
-	rr := ResourceRef{
+	rr := InputRequirement{
 		resourceID: resourceID,
 		quantity:   qty,
 	}
 	if err := rr.Validate(); err != nil {
-		return ResourceRef{}, err
+		return InputRequirement{}, err
 	}
 	return rr, nil
+}
+
+func NewProductReference(itemType string, productID int, quantity float64, unitStr string) (ProductReference, error) {
+	qty, err := shared.NewQuantity(quantity, unitStr)
+	if err != nil {
+		return ProductReference{}, err
+	}
+	qty = qty.ToBase()
+	pr := ProductReference{
+		productID: productID,
+		quantity:  qty,
+	}
+	if err := pr.Validate(); err != nil {
+		return ProductReference{}, err
+	}
+	return pr, nil
 }
 
 func NewStep(name, instructions string, order int) (Step, error) {
@@ -99,7 +138,7 @@ func NewTemplate(
 	difficulty int,
 	steps []Step,
 	description string,
-	resources []ResourceRef,
+	resources []InputRequirement,
 ) (*Template, error) {
 
 	qty, err := shared.NewQuantity(quantity, unitStr)
@@ -132,7 +171,7 @@ func ReconstructTemplate(
 	difficulty int,
 	steps []Step,
 	description string,
-	resources []ResourceRef,
+	resources []InputRequirement,
 ) (*Template, error) {
 
 	qty, err := shared.NewQuantity(quantity, unitStr)
@@ -158,7 +197,7 @@ func ReconstructTemplate(
 }
 
 // ===========================METHODS===========================
-func (t *Template) Update(name string, quantity float64, unitStr string, difficulty int, steps []Step, description string, resources []ResourceRef) error {
+func (t *Template) Update(name string, quantity float64, unitStr string, difficulty int, steps []Step, description string, resources []InputRequirement) error {
 	temp, err := NewTemplate(name, quantity, unitStr, difficulty, steps, description, resources)
 	if err != nil {
 		return err
@@ -174,7 +213,7 @@ func (t *Template) Update(name string, quantity float64, unitStr string, difficu
 	return nil
 }
 
-func (t *Template) UpdateResources(resources []ResourceRef) error {
+func (t *Template) UpdateResources(resources []InputRequirement) error {
 	for _, resource := range resources {
 		if err := resource.Validate(); err != nil {
 			return err
@@ -223,9 +262,19 @@ func (s *Step) Validate() error {
 	return nil
 }
 
-func (rr *ResourceRef) Validate() error {
+func (rr *InputRequirement) Validate() error {
 	if rr.resourceID <= 0 {
 		return ErrResourceIDInvalid
+	}
+	if rr.itemType != "RESOURCE" && rr.itemType != "PRODUCT" {
+		return ErrItemTypeInvalid
+	}
+	return nil
+}
+
+func (pr *ProductReference) Validate() error {
+	if pr.productID <= 0 {
+		return ErrProductIDInvalid
 	}
 	return nil
 }

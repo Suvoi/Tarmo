@@ -140,10 +140,10 @@ func mapStepsToDomain(dtos []inbound.StepCommand) ([]domain.Step, error) {
 	return steps, nil
 }
 
-func mapResourcesToDomain(dtos []inbound.ResourceRefCommand) ([]domain.ResourceRef, error) {
-	resources := make([]domain.ResourceRef, 0, len(dtos))
+func mapResourcesToDomain(dtos []inbound.InputRequirementCommand) ([]domain.InputRequirement, error) {
+	resources := make([]domain.InputRequirement, 0, len(dtos))
 	for _, r := range dtos {
-		ref, err := domain.NewResourceRef(r.ResourceID, r.Quantity, r.Unit)
+		ref, err := domain.NewInputRequirement(r.ResourceID, r.Quantity, r.Unit)
 		if err != nil {
 			return nil, err
 		}
@@ -152,8 +152,8 @@ func mapResourcesToDomain(dtos []inbound.ResourceRefCommand) ([]domain.ResourceR
 	return resources, nil
 }
 
-func mapResourcesToDTO(resources []domain.ResourceRef) []inbound.ResourceRefDTO {
-	dtos := make([]inbound.ResourceRefDTO, 0, len(resources))
+func mapResourcesToDTO(resources []domain.InputRequirement) []inbound.InputRequirementDTO {
+	dtos := make([]inbound.InputRequirementDTO, 0, len(resources))
 	for _, r := range resources {
 
 		qtyDTO := shared.QuantityDTO{
@@ -163,7 +163,7 @@ func mapResourcesToDTO(resources []domain.ResourceRef) []inbound.ResourceRefDTO 
 			},
 		}
 
-		dtos = append(dtos, inbound.ResourceRefDTO{
+		dtos = append(dtos, inbound.InputRequirementDTO{
 			ResourceID: r.ResourceID(),
 			Quantity:   qtyDTO,
 		})

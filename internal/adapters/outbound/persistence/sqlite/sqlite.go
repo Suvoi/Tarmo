@@ -78,7 +78,14 @@ func (r *SQLiteDB) init() error {
     base_unit TEXT
   );
 
-  
+  CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    price INTEGER,
+    quantity REAL,
+    unit TEXT
+  );
   `
 	_, err := r.db.Exec(query)
 	return err

@@ -9,7 +9,7 @@ type CreateTemplateCommand struct {
 	Unit        string
 	Difficulty  int
 	Steps       []StepCommand
-	Resources   []ResourceRefCommand
+	Resources   []InputRequirementCommand
 }
 
 type UpdateTemplateCommand struct {
@@ -20,7 +20,7 @@ type UpdateTemplateCommand struct {
 	Unit        string
 	Difficulty  int
 	Steps       []StepCommand
-	Resources   []ResourceRefCommand
+	Resources   []InputRequirementCommand
 }
 
 type StepCommand struct {
@@ -28,7 +28,7 @@ type StepCommand struct {
 	Instructions string
 }
 
-type ResourceRefCommand struct {
+type InputRequirementCommand struct {
 	ResourceID int
 	Quantity   float64
 	Unit       string
@@ -41,7 +41,7 @@ type TemplateDTO struct {
 	Quantity    shared.QuantityDTO
 	Difficulty  int
 	Steps       []StepDTO
-	Resources   []ResourceRefDTO
+	Resources   []InputRequirementDTO
 }
 
 type StepDTO struct {
@@ -50,7 +50,7 @@ type StepDTO struct {
 	Order        int
 }
 
-type ResourceRefDTO struct {
+type InputRequirementDTO struct {
 	ResourceID int
 	Quantity   shared.QuantityDTO
 }
